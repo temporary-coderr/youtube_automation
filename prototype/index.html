@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WISE-LAB — Motion Lab Preview</title>
+<style>
+:root{color-scheme:dark;--ink:#101827;--paper:#f4efe5;--mint:#91e3c0;--orange:#ffb36b}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080d17;font-family:Inter,system-ui,sans-serif}
+#stage{position:absolute;inset:0;display:grid;place-items:center}
+#frame{position:relative;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);overflow:hidden;background:#c6d9d4;isolation:isolate}
+.layer{position:absolute;inset:0;will-change:transform}
+.sky{background:linear-gradient(180deg,#b8d7d2 0%,#e8d9c4 100%)}
+.sun{position:absolute;width:11%;aspect-ratio:1;border-radius:50%;background:#ffcf91;right:16%;top:14%;box-shadow:0 0 70px #ffcf9180}
+.far{background:linear-gradient(180deg,transparent 35%,#8ba9a0 35%);clip-path:polygon(0 60%,14% 39%,27% 57%,42% 31%,57% 55%,75% 35%,100% 58%,100% 100%,0 100%)}
+.city{bottom:0;top:45%;background:repeating-linear-gradient(90deg,#718b84 0 8%,transparent 8% 11%);opacity:.55}
+.ground{top:78%;background:linear-gradient(180deg,#9eaa8c,#6d8177)}
+#camera{transform-origin:50% 60%;transition:none}
+#character{position:absolute;left:25%;bottom:13%;width:22%;height:58%;transform-origin:50% 100%;will-change:transform}
+.head{position:absolute;left:25%;top:0;width:50%;height:32%;border-radius:46% 48% 44% 44%;background:#b97850;z-index:3}
+.hair{position:absolute;left:22%;top:-2%;width:56%;height:14%;background:#20232b;border-radius:50% 50% 25% 25%;z-index:4;transform:rotate(-5deg)}
+.neck{position:absolute;left:43%;top:27%;width:14%;height:9%;background:#a96848;z-index:2}
+.body{position:absolute;left:13%;top:33%;width:74%;height:43%;background:#303b4c;border-radius:28% 28% 12% 12%;z-index:2}
+.arm{position:absolute;top:38%;width:18%;height:36%;background:#b97850;border-radius:30px;z-index:1;transform-origin:50% 8%}
+.arm.left{left:5%;transform:rotate(13deg)}.arm.right{right:5%;transform:rotate(-13deg)}
+.leg{position:absolute;top:70%;width:23%;height:30%;background:#202a37;border-radius:10px 10px 5px 5px;z-index:1}
+.leg.left{left:26%;transform:rotate(3deg)}.leg.right{right:26%;transform:rotate(-3deg)}
+#phone{position:absolute;left:63%;top:48%;width:5%;height:12%;border:5px solid #1e293b;border-radius:12px;background:#8ee5c3;transform:rotate(8deg);box-shadow:0 0 0 0 #91e3c080}
+#bubble{position:absolute;left:60%;top:26%;padding:1.2% 2%;border-radius:18px;background:#fff8e9;color:#263443;font-size:clamp(12px,1.5vw,24px);font-weight:700;opacity:0;transform:translateY(18px)}
+#bubble:after{content:"";position:absolute;left:18%;bottom:-12px;border-width:13px 13px 0 0;border-style:solid;border-color:#fff8e9 transparent transparent transparent}
+#caption{position:absolute;left:8%;right:8%;bottom:5%;text-align:center;color:white;font-size:clamp(15px,2.3vw,36px);font-weight:800;letter-spacing:.01em;text-shadow:0 3px 12px #111b;opacity:0}
+#eyebrow{position:absolute;top:7%;left:7%;color:#213b3c;font-size:clamp(11px,1.1vw,17px);font-weight:800;letter-spacing:.2em}
+#title{position:absolute;left:7%;top:15%;width:45%;font-size:clamp(28px,5.3vw,82px);line-height:.98;letter-spacing:-.055em;font-weight:900;color:#172b34;opacity:0;transform:translateY(30px)}
+#title span{color:#b35f39}
+#timeline{position:absolute;left:7%;right:7%;bottom:2%;height:3px;background:#ffffff55;z-index:10}
+#progress{height:100%;width:0;background:#91e3c0}
+</style>
+</head>
+<body><div id="stage"><main id="frame">
+<div id="camera" class="layer">
+<div class="layer sky"></div><div class="sun"></div><div class="layer far"></div><div class="layer city"></div><div class="layer ground"></div>
+<div id="eyebrow">WISE-LAB  /  ATTENTION SERIES</div>
+<div id="title">Your phone<br>is training<br><span>your focus.</span></div>
+<div id="character"><div class="hair"></div><div class="head"></div><div class="neck"></div><div class="body"></div><div class="arm left"></div><div class="arm right"></div><div class="leg left"></div><div class="leg right"></div></div>
+<div id="phone"></div><div id="bubble">Just one more check?</div>
+</div>
+<div id="caption"></div><div id="timeline"><div id="progress"></div></div>
+</main></div>
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=v=>{v=clamp(v,0,1);return v*v*(3-2*v)};
+window.renderAt=(t)=>{
+ const intro=ease(t/2.2), move=ease((t-2.0)/2.5), phone=ease((t-5.0)/.7), finish=ease((t-10.0)/1.4);
+ $('title').style.opacity=intro*(1-finish);
+ $('title').style.transform='translateY('+(30*(1-intro))+'px)';
+ $('character').style.transform='translate('+(move*17-7)+'%, '+(Math.sin(t*2.2)*1.2)+'%) scale('+(1+Math.sin(t*2)*.012)+')';
+ $('phone').style.transform='translateY('+(Math.sin(t*3)*5-phone*24)+'px) rotate('+(8+Math.sin(t*2)*3)+'deg)';
+ $('phone').style.boxShadow=phone>0?'0 0 '+(18+Math.sin(t*8)*12)+'px 5px #91e3c080':'none';
+ $('bubble').style.opacity=phone*(1-finish);
+ $('bubble').style.transform='translateY('+(18*(1-phone))+'px)';
+ $('camera').style.transform='scale('+(1+move*.075)+') translate('+(move*-2)+'%, '+(move*-1)+'%)';
+ $('far').style.transform='translateX('+(move*-2.5)+'%)';
+ $('city').style.transform='translateX('+(move*-5)+'%)';
+ $('caption').textContent=t<3?'Your attention is being pulled in tiny pieces.':t<7?'Every notification invites you to switch.':'And every switch has a cost.';
+ $('caption').style.opacity=clamp((t-2.4)/.5,0,1)*(1-clamp((t-11.3)/.4,0,1));
+ $('progress').style.width=(t/12*100)+'%';
+};
+window.renderAt(0);
+</script></body></html>
