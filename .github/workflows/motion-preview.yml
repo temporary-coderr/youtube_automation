@@ -1,0 +1,47 @@
+name: Motion Lab Preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "prototype/**"
+      - "scripts/**"
+      - ".github/workflows/motion-preview.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  render-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out experiment
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install renderer dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Render 12-second landscape test
+        run: |
+          python scripts/render_demo.py --seconds 12 --fps 24 --width 1280 --height 720 --output dist/wise-lab-motion-test.mp4
+
+      - name: Upload preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-motion-test
+          path: dist/wise-lab-motion-test.mp4
+          if-no-files-found: error
+          retention-days: 7
