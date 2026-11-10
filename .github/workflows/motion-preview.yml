@@ -26,9 +26,14 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install renderer dependencies
+      - name: Install FFmpeg
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
           ffmpeg -version
+
+      - name: Install Python and browser dependencies
+        run: |
           python -m pip install -r requirements.txt
           python -m playwright install chromium
 
