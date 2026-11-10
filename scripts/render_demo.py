@@ -26,7 +26,7 @@ async def render(output: Path, seconds: float, fps: int, width: int, height: int
                 reduced_motion="reduce",
             )
             await page.goto(HTML.as_uri(), wait_until="load")
-            await page.evaluate("document.fonts.ready")
+            await page.evaluate("() => document.fonts.ready.then(() => true)")
             total = round(seconds * fps)
             for frame in range(total):
                 timestamp = frame / fps
