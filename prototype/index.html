@@ -3,68 +3,147 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WISE-LAB — Motion Lab Preview</title>
+<title>WISE-LAB — Layered Motion Study</title>
 <style>
-:root{color-scheme:dark;--ink:#101827;--paper:#f4efe5;--mint:#91e3c0;--orange:#ffb36b}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080d17;font-family:Inter,system-ui,sans-serif}
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080d18;font-family:Inter,system-ui,sans-serif}
 #stage{position:absolute;inset:0;display:grid;place-items:center}
-#frame{position:relative;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);overflow:hidden;background:#c6d9d4;isolation:isolate}
-.layer{position:absolute;inset:0;will-change:transform}
-.sky{background:linear-gradient(180deg,#b8d7d2 0%,#e8d9c4 100%)}
-.sun{position:absolute;width:11%;aspect-ratio:1;border-radius:50%;background:#ffcf91;right:16%;top:14%;box-shadow:0 0 70px #ffcf9180}
-.far{background:linear-gradient(180deg,transparent 35%,#8ba9a0 35%);clip-path:polygon(0 60%,14% 39%,27% 57%,42% 31%,57% 55%,75% 35%,100% 58%,100% 100%,0 100%)}
-.city{bottom:0;top:45%;background:repeating-linear-gradient(90deg,#718b84 0 8%,transparent 8% 11%);opacity:.55}
-.ground{top:78%;background:linear-gradient(180deg,#9eaa8c,#6d8177)}
-#camera{transform-origin:50% 60%;transition:none}
-#character{position:absolute;left:25%;bottom:13%;width:22%;height:58%;transform-origin:50% 100%;will-change:transform}
-.head{position:absolute;left:25%;top:0;width:50%;height:32%;border-radius:46% 48% 44% 44%;background:#b97850;z-index:3}
-.hair{position:absolute;left:22%;top:-2%;width:56%;height:14%;background:#20232b;border-radius:50% 50% 25% 25%;z-index:4;transform:rotate(-5deg)}
-.neck{position:absolute;left:43%;top:27%;width:14%;height:9%;background:#a96848;z-index:2}
-.body{position:absolute;left:13%;top:33%;width:74%;height:43%;background:#303b4c;border-radius:28% 28% 12% 12%;z-index:2}
-.arm{position:absolute;top:38%;width:18%;height:36%;background:#b97850;border-radius:30px;z-index:1;transform-origin:50% 8%}
-.arm.left{left:5%;transform:rotate(13deg)}.arm.right{right:5%;transform:rotate(-13deg)}
-.leg{position:absolute;top:70%;width:23%;height:30%;background:#202a37;border-radius:10px 10px 5px 5px;z-index:1}
-.leg.left{left:26%;transform:rotate(3deg)}.leg.right{right:26%;transform:rotate(-3deg)}
-#phone{position:absolute;left:63%;top:48%;width:5%;height:12%;border:5px solid #1e293b;border-radius:12px;background:#8ee5c3;transform:rotate(8deg);box-shadow:0 0 0 0 #91e3c080}
-#bubble{position:absolute;left:60%;top:26%;padding:1.2% 2%;border-radius:18px;background:#fff8e9;color:#263443;font-size:clamp(12px,1.5vw,24px);font-weight:700;opacity:0;transform:translateY(18px)}
-#bubble:after{content:"";position:absolute;left:18%;bottom:-12px;border-width:13px 13px 0 0;border-style:solid;border-color:#fff8e9 transparent transparent transparent}
-#caption{position:absolute;left:8%;right:8%;bottom:5%;text-align:center;color:white;font-size:clamp(15px,2.3vw,36px);font-weight:800;letter-spacing:.01em;text-shadow:0 3px 12px #111b;opacity:0}
-#eyebrow{position:absolute;top:7%;left:7%;color:#213b3c;font-size:clamp(11px,1.1vw,17px);font-weight:800;letter-spacing:.2em}
-#title{position:absolute;left:7%;top:15%;width:45%;font-size:clamp(28px,5.3vw,82px);line-height:.98;letter-spacing:-.055em;font-weight:900;color:#172b34;opacity:0;transform:translateY(30px)}
-#title span{color:#b35f39}
-#timeline{position:absolute;left:7%;right:7%;bottom:2%;height:3px;background:#ffffff55;z-index:10}
-#progress{height:100%;width:0;background:#91e3c0}
+#frame{position:relative;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);overflow:hidden;background:#101c31;isolation:isolate}
+svg{display:block;width:100%;height:100%}
+#world{transform-origin:960px 570px;will-change:transform}
+#far,#mid,#near,#hero,#fx{transform-box:fill-box;will-change:transform}
+#caption{position:absolute;left:9%;right:9%;bottom:7%;min-height:7%;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-size:clamp(17px,2.15vw,34px);font-weight:800;letter-spacing:.005em;text-shadow:0 3px 18px #020711,0 1px 4px #020711;opacity:0;z-index:5}
+#caption span{background:#101827b8;border:1px solid #ffffff20;border-radius:12px;padding:.32em .8em;backdrop-filter:blur(8px)}
+#brand{position:absolute;top:6%;left:6%;color:#d9e9f0;font-size:clamp(10px,1vw,15px);font-weight:800;letter-spacing:.24em;opacity:.82;z-index:5}
+#progress{position:absolute;left:0;bottom:0;height:3px;width:0;background:#9ae6ce;z-index:6}
 </style>
 </head>
-<body><div id="stage"><main id="frame">
-<div id="camera" class="layer">
-<div class="layer sky"></div><div class="sun"></div><div id="far" class="layer far"></div><div id="city" class="layer city"></div><div class="layer ground"></div>
-<div id="eyebrow">WISE-LAB  /  ATTENTION SERIES</div>
-<div id="title">Your phone<br>is training<br><span>your focus.</span></div>
-<div id="character"><div class="hair"></div><div class="head"></div><div class="neck"></div><div class="body"></div><div class="arm left"></div><div class="arm right"></div><div class="leg left"></div><div class="leg right"></div></div>
-<div id="phone"></div><div id="bubble">Just one more check?</div>
-</div>
-<div id="caption"></div><div id="timeline"><div id="progress"></div></div>
+<body>
+<div id="stage"><main id="frame">
+<div id="brand">WISE-LAB  /  ATTENTION SERIES</div>
+<svg viewBox="0 0 1920 1080" role="img" aria-label="Layered cinematic 2D illustration of a person distracted by a phone on a rainy city evening">
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#101b36"/><stop offset=".52" stop-color="#344c68"/><stop offset="1" stop-color="#d18c70"/></linearGradient>
+ <linearGradient id="haze" x2="0" y2="1"><stop stop-color="#f5b18a" stop-opacity="0"/><stop offset="1" stop-color="#f5b18a" stop-opacity=".38"/></linearGradient>
+ <linearGradient id="street" x2="0" y2="1"><stop stop-color="#344453"/><stop offset="1" stop-color="#101a2a"/></linearGradient>
+ <linearGradient id="coat" x2="1" y2="1"><stop stop-color="#48566a"/><stop offset="1" stop-color="#202b3b"/></linearGradient>
+ <radialGradient id="phoneGlow"><stop stop-color="#a8ffe0" stop-opacity=".85"/><stop offset="1" stop-color="#78e8c4" stop-opacity="0"/></radialGradient>
+ <radialGradient id="lampGlow"><stop stop-color="#ffc58e" stop-opacity=".65"/><stop offset="1" stop-color="#ffc58e" stop-opacity="0"/></radialGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="34"/></filter>
+ <filter id="shadow"><feGaussianBlur stdDeviation="18"/></filter>
+ <clipPath id="viewport"><rect width="1920" height="1080"/></clipPath>
+</defs>
+<g clip-path="url(#viewport)">
+ <g id="world">
+  <!-- LAYER 1: distant atmosphere and skyline -->
+  <g id="far">
+   <rect width="1920" height="1080" fill="url(#sky)"/>
+   <ellipse cx="1460" cy="520" rx="560" ry="230" fill="#f2a47e" opacity=".17" filter="url(#soft)"/>
+   <path d="M0 620 L180 510 300 575 470 450 620 565 800 470 980 590 1160 455 1330 555 1510 430 1690 560 1830 480 1920 530V850H0Z" fill="#26384d"/>
+   <g fill="#1a2a40" opacity=".95">
+    <path d="M0 560h170v350H0zM190 640h170v270H190zM385 535h155v375H385zM570 615h205v295H570zM810 520h170v390H810zM1015 620h190v290h-190zM1240 510h175v400h-175zM1450 600h190v310h-190zM1670 540h250v370h-250z"/>
+   </g>
+   <g fill="#f6c18e" opacity=".42">
+    <path d="M38 600h18v28H38zm70 0h18v28h-18zm120 75h18v28h-18zm195-95h18v28h-18zm65 0h18v28h-18zm330 45h18v28h-18zm240-80h18v28h-18zm72 0h18v28h-18zm250 75h18v28h-18zm240-55h18v28h-18z"/>
+   </g>
+  </g>
+  <!-- LAYER 2: middle-ground street and architecture -->
+  <g id="mid">
+   <rect y="760" width="1920" height="320" fill="url(#street)"/>
+   <path d="M0 810 Q480 760 960 820T1920 800V1080H0Z" fill="#202e3e"/>
+   <path d="M0 900 Q520 850 960 900T1920 870" fill="none" stroke="#f5b48c" stroke-opacity=".18" stroke-width="8"/>
+   <g opacity=".7">
+    <path d="M1450 540v270" stroke="#17283a" stroke-width="22"/>
+    <path d="M1390 550h120" stroke="#17283a" stroke-width="18"/>
+    <ellipse cx="1450" cy="570" rx="125" ry="125" fill="url(#lampGlow)"/>
+    <path d="M1400 545h100l-20 32h-60z" fill="#f7c18f"/>
+   </g>
+   <g fill="#a8d9d0" opacity=".25">
+    <path d="M250 950h220l-25 10H270zM1100 985h330l-40 12h-250zM1510 920h180l-20 8h-140z"/>
+   </g>
+  </g>
+  <!-- LAYER 3: rain, light shafts and drifting particles -->
+  <g id="fx" opacity=".72" stroke-linecap="round">
+   <path d="M150 160l-55 150M360 80l-48 130M610 170l-54 145M880 50l-55 150M1120 140l-50 140M1380 60l-52 145M1650 150l-48 130M1840 40l-50 140" stroke="#d4e8ef" stroke-opacity=".28" stroke-width="5"/>
+   <path d="M80 440l-28 75M480 370l-30 80M760 500l-25 68M1240 360l-28 75M1580 430l-30 80M1780 330l-25 70" stroke="#d4e8ef" stroke-opacity=".18" stroke-width="4"/>
+   <path d="M1380 600L900 1080h360l260-480z" fill="#ffc18b" opacity=".035" stroke="none"/>
+   <circle cx="1210" cy="370" r="8" fill="#ffd6ae"/><circle cx="690" cy="290" r="5" fill="#d9f4ef"/><circle cx="1700" cy="700" r="7" fill="#ffc99c"/>
+  </g>
+  <!-- LAYER 4: hero character with independently animated limbs -->
+  <g id="hero" transform="translate(0 0)">
+   <ellipse cx="720" cy="935" rx="220" ry="34" fill="#07111f" opacity=".55" filter="url(#shadow)"/>
+   <g id="legs">
+    <path d="M655 760 Q620 835 615 930 L700 930 735 795Z" fill="#182333"/>
+    <path d="M750 770 Q790 840 815 925 L900 925 825 770Z" fill="#202d3d"/>
+    <path d="M615 910h92q15 22-4 38H590q-18-13 25-38zM815 908h88q22 24-2 40h-100q-14-18 14-40z" fill="#101a29"/>
+   </g>
+   <path d="M650 410 Q720 370 800 420 Q870 470 850 700 L820 805 Q730 835 620 790 L590 540 Q590 455 650 410Z" fill="url(#coat)" stroke="#718094" stroke-opacity=".35" stroke-width="8"/>
+   <path d="M650 440Q720 490 790 440" fill="none" stroke="#8391a0" stroke-opacity=".3" stroke-width="12"/>
+   <g id="leftArm" transform="rotate(0 640 475)">
+    <path d="M630 465Q575 500 560 600L590 690Q620 710 642 675L675 540Z" fill="#303e52"/>
+    <path d="M590 665Q565 700 590 730Q615 747 635 713L630 678Z" fill="#a96f55"/>
+   </g>
+   <g id="rightArm" transform="rotate(0 820 470)">
+    <path d="M815 460Q880 490 900 590L865 665Q830 680 812 645L780 535Z" fill="#3b4a5e"/>
+    <path d="M860 635Q890 650 885 690Q875 720 845 700L835 665Z" fill="#b77b5c"/>
+   </g>
+   <path d="M680 360h90v90h-90z" fill="#a66e53"/>
+   <ellipse cx="725" cy="300" rx="104" ry="126" fill="#bd8465"/>
+   <path d="M622 300Q610 180 720 165Q820 160 835 270L810 250Q780 215 730 225Q680 230 650 285L640 350Z" fill="#171d28"/>
+   <path d="M650 230Q700 160 785 205L820 260Q770 230 730 250Q680 265 650 300Z" fill="#252b37"/>
+   <path d="M680 315q18-12 38 0M750 315q18-12 36 0" stroke="#422f2b" stroke-width="8" fill="none" stroke-linecap="round"/>
+   <path d="M710 365q22 12 42 0" stroke="#74483f" stroke-width="6" fill="none" stroke-linecap="round"/>
+   <!-- phone glow and phone are separate prop layers -->
+   <ellipse id="phoneAura" cx="900" cy="660" rx="190" ry="190" fill="url(#phoneGlow)" opacity=".2"/>
+   <g id="phone" transform="rotate(8 900 650)">
+    <rect x="866" y="595" width="70" height="125" rx="13" fill="#111b29" stroke="#8be6c6" stroke-width="6"/>
+    <rect x="875" y="607" width="52" height="96" rx="6" fill="#b8f4df"/>
+    <rect x="884" y="620" width="34" height="7" rx="3" fill="#477e76"/>
+    <rect x="884" y="636" width="27" height="5" rx="2" fill="#77b9a7"/>
+    <circle cx="901" cy="710" r="4" fill="#a9ffe2"/>
+   </g>
+  </g>
+  <!-- LAYER 5: foreground silhouettes for depth -->
+  <g id="near" opacity=".9">
+   <path d="M0 1000Q150 930 300 1010L390 1080H0Z" fill="#0b1523"/>
+   <path d="M1510 1080Q1640 920 1740 1000Q1810 930 1920 970V1080Z" fill="#0b1523"/>
+   <path d="M70 880l-25 110M110 890l-18 90M1780 900l-20 100M1830 890l-15 110" stroke="#263c4a" stroke-width="12" opacity=".6"/>
+  </g>
+  <!-- LAYER 6: cinematic grade and transition veil -->
+  <rect width="1920" height="1080" fill="url(#haze)" opacity=".42" pointer-events="none"/>
+  <rect width="1920" height="1080" fill="none" stroke="#050b14" stroke-width="80" opacity=".34" pointer-events="none"/>
+  <rect id="transition" width="1920" height="1080" fill="#091321" opacity="0" pointer-events="none"/>
+ </g>
+</g>
+</svg>
+<div id="caption"><span></span></div><div id="progress"></div>
 </main></div>
 <script>
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const ease=v=>{v=clamp(v,0,1);return v*v*(3-2*v)};
+const smooth=v=>{v=clamp(v,0,1);return v*v*(3-2*v)};
+const mix=(a,b,p)=>a+(b-a)*p;
 window.renderAt=(t)=>{
- const intro=ease(t/2.2), move=ease((t-2.0)/2.5), phone=ease((t-5.0)/.7), finish=ease((t-10.0)/1.4);
- $('title').style.opacity=intro*(1-finish);
- $('title').style.transform='translateY('+(30*(1-intro))+'px)';
- $('character').style.transform='translate('+(move*17-7)+'%, '+(Math.sin(t*2.2)*1.2)+'%) scale('+(1+Math.sin(t*2)*.012)+')';
- $('phone').style.transform='translateY('+(Math.sin(t*3)*5-phone*24)+'px) rotate('+(8+Math.sin(t*2)*3)+'deg)';
- $('phone').style.boxShadow=phone>0?'0 0 '+(18+Math.sin(t*8)*12)+'px 5px #91e3c080':'none';
- $('bubble').style.opacity=phone*(1-finish);
- $('bubble').style.transform='translateY('+(18*(1-phone))+'px)';
- $('camera').style.transform='scale('+(1+move*.075)+') translate('+(move*-2)+'%, '+(move*-1)+'%)';
- $('far').style.transform='translateX('+(move*-2.5)+'%)';
- $('city').style.transform='translateX('+(move*-5)+'%)';
- $('caption').textContent=t<3?'Your attention is being pulled in tiny pieces.':t<7?'Every notification invites you to switch.':'And every switch has a cost.';
- $('caption').style.opacity=clamp((t-2.4)/.5,0,1)*(1-clamp((t-11.3)/.4,0,1));
+ const intro=smooth(t/1.8), approach=smooth((t-1.5)/3.0), alert=smooth((t-4.5)/.8), resolve=smooth((t-9.6)/1.8);
+ $('world').style.transform='translate('+(-18*approach)+'px,'+(-8*approach)+'px) scale('+(1+0.055*approach)+')';
+ $('far').style.transform='translateX('+(-8*approach)+'px)';
+ $('mid').style.transform='translateX('+(-24*approach)+'px)';
+ $('near').style.transform='translateX('+(-48*approach)+'px)';
+ $('hero').style.transform='translate('+mix(0,42,approach)+'px,'+(Math.sin(t*2.5)*3)+'px)';
+ $('legs').style.transform='rotate('+(Math.sin(t*5)*2.2*(1-approach*.7))+'deg)';
+ $('leftArm').style.transform='rotate('+(Math.sin(t*3.8)*5)+'deg)';
+ $('rightArm').style.transform='rotate('+(-8+Math.sin(t*4)*4-alert*13)+'deg)';
+ $('phone').style.transform='translateY('+(-alert*18+Math.sin(t*5)*3)+'px) rotate('+(8+Math.sin(t*3)*2-alert*7)+'deg)';
+ $('phoneAura').style.opacity=String(.12+alert*(.38+.12*Math.sin(t*8)));
+ $('fx').style.transform='translateY('+(Math.sin(t*1.4)*5)+'px)';
+ $('transition').style.opacity=String(Math.max(0,Math.sin(Math.PI*clamp((t-10.9)/1.1,0,1))*.28));
+ const cap=$('caption'), span=cap.querySelector('span');
+ span.textContent=t<3?'A single notification pulls your attention away.':t<7?'Your focus shifts before you even decide.':'Every interruption leaves a little residue.';
+ cap.style.opacity=String(smooth((t-.8)/.5)*(1-smooth((t-11.35)/.4)));
  $('progress').style.width=(t/12*100)+'%';
 };
 window.renderAt(0);
-</script></body></html>
+</script>
+</body>
+</html>
