@@ -80,13 +80,26 @@ svg{display:block;width:100%;height:100%}
    </g>
    <path d="M650 410 Q720 370 800 420 Q870 470 850 700 L820 805 Q730 835 620 790 L590 540 Q590 455 650 410Z" fill="url(#coat)" stroke="#718094" stroke-opacity=".35" stroke-width="8"/>
    <path d="M650 440Q720 490 790 440" fill="none" stroke="#8391a0" stroke-opacity=".3" stroke-width="12"/>
-   <g id="leftArm" transform="rotate(0 640 475)">
-    <path d="M630 465Q575 500 560 600L590 690Q620 710 642 675L675 540Z" fill="#303e52"/>
-    <path d="M590 665Q565 700 590 730Q615 747 635 713L630 678Z" fill="#a96f55"/>
+   <!-- ARTICULATED ARM RIG: each limb is a chain of shoulder > elbow > wrist > hand pivots.
+        Segment strokes overlap at joints, so rotation cannot expose gaps between body parts. -->
+   <g id="leftArm" transform="translate(640 475)">
+    <path d="M0 0 C-24 30 -48 72 -48 112" fill="none" stroke="#303e52" stroke-width="58" stroke-linecap="round"/>
+    <g id="leftForearm" transform="translate(-48 112)">
+     <path d="M0 0 C-4 28 -8 57 -10 84" fill="none" stroke="#a96f55" stroke-width="35" stroke-linecap="round"/>
+     <g id="leftHand" transform="translate(-10 84)">
+      <path d="M-13 -2 Q-22 12 -12 34 Q-2 47 13 35 Q24 23 12 2 Q2 -9 -13 -2Z" fill="#b77b5c"/>
+     </g>
+    </g>
    </g>
-   <g id="rightArm" transform="rotate(0 820 470)">
-    <path d="M815 460Q880 490 900 590L865 665Q830 680 812 645L780 535Z" fill="#3b4a5e"/>
-    <path d="M860 635Q890 650 885 690Q875 720 845 700L835 665Z" fill="#b77b5c"/>
+   <g id="rightArm" transform="translate(810 470)">
+    <path d="M0 0 C24 22 48 55 56 88" fill="none" stroke="#3b4a5e" stroke-width="58" stroke-linecap="round"/>
+    <g id="rightForearm" transform="translate(56 88)">
+     <path d="M0 0 C10 24 19 49 25 77" fill="none" stroke="#a96f55" stroke-width="36" stroke-linecap="round"/>
+     <g id="rightHand" transform="translate(25 77)">
+      <path d="M-13 -7 Q-28 4 -17 24 Q-5 40 14 28 Q25 14 12 -3 Q0 -14 -13 -7Z" fill="#bd8465"/>
+      <path d="M-9 2 Q0 8 11 3" fill="none" stroke="#8d5c49" stroke-width="5" stroke-linecap="round"/>
+     </g>
+    </g>
    </g>
    <path d="M680 360h90v90h-90z" fill="#a66e53"/>
    <ellipse cx="725" cy="300" rx="104" ry="126" fill="#bd8465"/>
@@ -134,8 +147,12 @@ window.renderAt=(t)=>{
  $('legs').style.transform='rotate('+(Math.sin(t*5)*2.2*(1-approach*.7))+'deg)';
  // Rotate each arm around its actual shoulder in SVG user coordinates.
  // SVG transform attributes avoid CSS fill-box centering, which detached the arms.
- $('leftArm').setAttribute('transform','rotate('+(Math.sin(t*3.8)*5)+' 640 475)');
- $('rightArm').setAttribute('transform','rotate('+(-8+Math.sin(t*4)*4-alert*13)+' 820 470)');
+ // Shoulder and elbow are separate pivots. The upper-arm and forearm strokes
+ // overlap at every joint, maintaining a continuous silhouette through motion.
+ $('leftArm').setAttribute('transform','translate(640 475) rotate('+(Math.sin(t*3.8)*3.5)+')');
+ $('leftForearm').setAttribute('transform','translate(-48 112) rotate('+(Math.sin(t*3.8+0.7)*4)+')');
+ $('rightArm').setAttribute('transform','translate(810 470) rotate('+(5+Math.sin(t*3.2)*2-alert*3)+')');
+ $('rightForearm').setAttribute('transform','translate(56 88) rotate('+(-8+Math.sin(t*3.5)*2+alert*5)+')');
  $('phone').style.transform='translateY('+(-alert*18+Math.sin(t*5)*3)+'px) rotate('+(8+Math.sin(t*3)*2-alert*7)+'deg)';
  $('phoneAura').style.opacity=String(.12+alert*(.38+.12*Math.sin(t*8)));
  $('fx').style.transform='translateY('+(Math.sin(t*1.4)*5)+'px)';
