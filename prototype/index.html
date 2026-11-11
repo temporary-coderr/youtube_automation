@@ -132,8 +132,10 @@ window.renderAt=(t)=>{
  $('near').style.transform='translateX('+(-48*approach)+'px)';
  $('hero').style.transform='translate('+mix(0,42,approach)+'px,'+(Math.sin(t*2.5)*3)+'px)';
  $('legs').style.transform='rotate('+(Math.sin(t*5)*2.2*(1-approach*.7))+'deg)';
- $('leftArm').style.transform='rotate('+(Math.sin(t*3.8)*5)+'deg)';
- $('rightArm').style.transform='rotate('+(-8+Math.sin(t*4)*4-alert*13)+'deg)';
+ // Rotate each arm around its actual shoulder in SVG user coordinates.
+ // SVG transform attributes avoid CSS fill-box centering, which detached the arms.
+ $('leftArm').setAttribute('transform','rotate('+(Math.sin(t*3.8)*5)+' 640 475)');
+ $('rightArm').setAttribute('transform','rotate('+(-8+Math.sin(t*4)*4-alert*13)+' 820 470)');
  $('phone').style.transform='translateY('+(-alert*18+Math.sin(t*5)*3)+'px) rotate('+(8+Math.sin(t*3)*2-alert*7)+'deg)';
  $('phoneAura').style.opacity=String(.12+alert*(.38+.12*Math.sin(t*8)));
  $('fx').style.transform='translateY('+(Math.sin(t*1.4)*5)+'px)';
