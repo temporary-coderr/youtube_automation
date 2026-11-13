@@ -1,0 +1,46 @@
+name: WISE-LAB Mixamo Action Library Experiment
+on:
+  push:
+    branches: [feature/cinematic-engine]
+    paths:
+      - 'prototype/mixamo_action_library.py'
+      - '.github/workflows/mixamo-action-library.yml'
+      - 'assets/mixamo/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wise-mixamo-library-\${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  import-and-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+      - name: Validate Blender action workflow
+        run: |
+          set -euo pipefail
+          mkdir -p renders/mixamo-library
+          blender --version
+          blender -b --python prototype/mixamo_action_library.py -- --self-test
+      - name: Import Mixamo FBX action library when source files are supplied
+        run: |
+          set -euo pipefail
+          if [ -f assets/mixamo/character.fbx ] && compgen -G "assets/mixamo/actions/*.fbx" > /dev/null; then
+            blender -b -t 4 --python prototype/mixamo_action_library.py
+          else
+            echo "Mixamo FBX inputs not present. Blender smoke test passed; waiting for private FBX inputs." | tee renders/mixamo-library/INPUTS_REQUIRED.txt
+          fi
+      - name: Upload experiment report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-mixamo-action-library-\${{ github.run_number }}
+          path: renders/mixamo-library/**
+          if-no-files-found: warn
+          retention-days: 7
