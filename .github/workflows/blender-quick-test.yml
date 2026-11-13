@@ -1,0 +1,49 @@
+name: Blender 7-Second Checkpoint Test
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/cinematic-engine]
+    paths:
+      - 'prototype/blender_quick_test.py'
+      - '.github/workflows/blender-quick-test.yml'
+permissions:
+  contents: read
+concurrency:
+  group: blender-quick-test-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender ffmpeg libegl1 libgl1 libx11-6 libxi6 libxrender1 libxfixes3 libxkbcommon0
+          blender --version | head -n 2
+      - name: Render 7-second Blender scene to checkpoint frames
+        env:
+          WISE_OUTPUT: renders/blender-quick-test.mp4
+        run: |
+          mkdir -p renders/blender-frames
+          blender -b -t 4 --python prototype/blender_quick_test.py
+      - name: Encode video and create contact sheet
+        if: success()
+        run: |
+          ffmpeg -hide_banner -loglevel error -y -framerate 24 -i renders/blender-frames/frame_%04d.png -c:v libx264 -preset veryfast -crf 19 -pix_fmt yuv420p renders/blender-quick-test.mp4
+          ffmpeg -hide_banner -loglevel error -y -i renders/blender-quick-test.mp4 -vf "fps=1,scale=480:-1,tile=4x2" -frames:v 1 renders/blender-quick-contact-sheet.jpg
+          ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate -of json renders/blender-quick-test.mp4 > renders/blender-quick-report.json
+      - name: Upload checkpoint frames even after failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-blender-quick-checkpoints-${{ github.run_number }}
+          path: |
+            renders/blender-frames/*.png
+            renders/blender-quick-test.mp4
+            renders/blender-quick-contact-sheet.jpg
+            renders/blender-quick-report.json
+            renders/blender-quick-test.blend
+          if-no-files-found: warn
+          retention-days: 7

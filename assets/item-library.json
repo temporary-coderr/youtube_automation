@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "style": "flat 2D cinematic vector; layered parallax; consistent proportions; no raster stock imagery",
+  "characters": {
+    "lead_male": {
+      "skin": "#a96f55",
+      "hair": "#171e2a",
+      "hoodie": "#30445a",
+      "trousers": "#202d40",
+      "shoes": "#101a29",
+      "scale": 1,
+      "rig": "humanoid_2bone_v1"
+    }
+  },
+  "props": {
+    "phone": {
+      "shape": "rounded_slab",
+      "body": "#101a29",
+      "screen": "#9ce5d4",
+      "anchor": "right_palm",
+      "interaction": "attach_to_hand"
+    },
+    "backpack": {
+      "shape": "soft_rect",
+      "color": "#394b60"
+    },
+    "bench": {
+      "shape": "slatted_bench",
+      "color": "#465666"
+    },
+    "street_lamp": {
+      "shape": "lamp_post",
+      "color": "#283747"
+    },
+    "desk": {
+      "shape": "table",
+      "color": "#6d5140"
+    },
+    "chair": {
+      "shape": "chair",
+      "color": "#35495d"
+    },
+    "notebook": {
+      "shape": "open_book",
+      "color": "#e7dfc8"
+    },
+    "pen": {
+      "shape": "thin_cylinder",
+      "color": "#293b50"
+    },
+    "desk_lamp": {
+      "shape": "articulated_lamp",
+      "color": "#d6b47c"
+    },
+    "mug": {
+      "shape": "cylinder",
+      "color": "#b7d1ca"
+    },
+    "bed": {
+      "shape": "bed",
+      "color": "#42566b"
+    },
+    "side_table": {
+      "shape": "table",
+      "color": "#59483e"
+    },
+    "window": {
+      "shape": "window",
+      "color": "#1b3044"
+    },
+    "trees": {
+      "shape": "layered_tree_silhouettes",
+      "color": "#263f3b"
+    },
+    "sun": {
+      "shape": "circle",
+      "color": "#e7ad78"
+    },
+    "rooftop_wall": {
+      "shape": "low_wall",
+      "color": "#394957"
+    }
+  },
+  "environment_layers": [
+    "far_sky",
+    "distant_silhouette",
+    "midground_architecture",
+    "foreground_props",
+    "ground_plane",
+    "character",
+    "atmosphere"
+  ],
+  "motion_clips": [
+    "walk_cycle",
+    "stop_and_weight_shift",
+    "reach_and_grasp",
+    "sit_down",
+    "place_prop",
+    "write",
+    "breath_reset",
+    "walk_away"
+  ],
+  "camera_moves": [
+    "tracking",
+    "push_in",
+    "over_shoulder_pan",
+    "parallax_track",
+    "pullback"
+  ],
+  "transition": "0.6-second cross-dissolve with camera continuity"
+}
