@@ -165,3 +165,5 @@ def main():
  if code: raise RuntimeError(f"ffmpeg exited {code}")
  print(f"Rendered {DURATION*FPS} frames, four reference-style comic beats")
 if __name__=="__main__": main()
+
+# workflow trigger: isolated reference-style render
