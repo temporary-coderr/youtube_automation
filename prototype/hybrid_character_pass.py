@@ -1,83 +1,124 @@
 import bpy, math, os
 from mathutils import Vector
 from math import radians
-# Transparent Blender character pass; backgrounds/props are supplied as an illustrated frame.
+
+# WISE-LAB hybrid character pass: connected overlapping forms with endpoint-driven limbs.
+# The illustrated room remains a separate 2D background/compositing layer.
 OUT="renders/character"; os.makedirs(OUT,exist_ok=True)
 bpy.ops.object.select_all(action="SELECT"); bpy.ops.object.delete(use_global=False)
-s=bpy.context.scene; s.render.engine="BLENDER_EEVEE"; s.render.resolution_x=1280; s.render.resolution_y=720; s.render.resolution_percentage=100
+s=bpy.context.scene
+s.render.engine="BLENDER_EEVEE"
+s.render.resolution_x=1280; s.render.resolution_y=720; s.render.resolution_percentage=100
 s.render.fps=24; s.frame_start=1; s.frame_end=168; s.eevee.taa_render_samples=8
 s.render.image_settings.file_format="PNG"; s.render.image_settings.color_mode="RGBA"; s.render.film_transparent=True
 s.view_settings.view_transform="Standard"; s.view_settings.look="Medium High Contrast"
-def material(n,c):
- m=bpy.data.materials.new(n); m.diffuse_color=(*c,1); m.use_nodes=True; m.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value=(*c,1); m.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value=.78; return m
-skin=material("warm skin",(.58,.34,.25)); hoodie=material("charcoal hoodie",(.075,.095,.13)); pants=material("black jeans",(.025,.035,.055)); hair=material("black hair",(.018,.022,.03)); shoes=material("sneakers",(.08,.09,.11)); white=material("eye whites",(.9,.88,.82))
-def ellipsoid(name,loc,scale,mat):
- bpy.ops.mesh.primitive_uv_sphere_add(segments=24,ring_count=16,location=loc); o=bpy.context.object; o.name=name; o.scale=scale; bpy.ops.object.transform_apply(location=False,rotation=False,scale=True); o.data.materials.append(mat); bpy.ops.object.shade_smooth(); return o
-def capsule(name,a,b,r,mat):
- a=Vector(a); b=Vector(b); d=b-a; mid=(a+b)/2
- bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=r,depth=d.length,location=mid); o=bpy.context.object; o.name=name; o.rotation_mode="QUATERNION"; o.rotation_quaternion=d.to_track_quat("Z","Y"); o.data.materials.append(mat)
- bevel=o.modifiers.new("soft ends","BEVEL"); bevel.width=r*.9; bevel.segments=4; o.modifiers.new("weighted normals","WEIGHTED_NORMAL")
- # Add rounded joints at both ends
- ellipsoid(name+" joint A",a,(r,r,r),mat); ellipsoid(name+" joint B",b,(r,r,r),mat)
+
+def mat(name,color):
+ m=bpy.data.materials.new(name); m.diffuse_color=(*color,1); m.use_nodes=True
+ bs=m.node_tree.nodes.get("Principled BSDF"); bs.inputs["Base Color"].default_value=(*color,1); bs.inputs["Roughness"].default_value=.82
+ return m
+skin=mat("warm brown skin",(.55,.31,.22)); hoodie=mat("charcoal hoodie",(.055,.07,.095))
+pants=mat("black denim",(.018,.025,.04)); hair=mat("black hair",(.012,.015,.02)); shoe=mat("dark sneakers",(.06,.07,.085))
+def ball(name,scale,material):
+ bpy.ops.mesh.primitive_uv_sphere_add(segments=24,ring_count=16)
+ o=bpy.context.object; o.name=name; o.scale=scale; o.data.materials.append(material); bpy.ops.object.shade_smooth()
  return o
-# Orthographic front camera, character occupies ~62% of frame height.
-bpy.ops.object.camera_add(location=(0,-12,2.6)); cam=bpy.context.object; cam.data.type="ORTHO"; cam.data.ortho_scale=9.6; cam.rotation_euler=(radians(90),0,0); s.camera=cam
-# Character local coordinates, facing camera. Root travels toward desk; head/torso stay connected.
-root=bpy.data.objects.new("character_root",None); bpy.context.collection.objects.link(root)
-# Body and head
-torso=ellipsoid("hoodie torso",(0,0,1.55),(.48,.27,.66),hoodie); head=ellipsoid("head",(0,-.015,2.42),(.32,.29,.39),skin)
-haircap=ellipsoid("messy hair",(0,.015,2.68),(.34,.30,.22),hair)
-# face points toward camera (-Y)
-for x in (-.12,.12): ellipsoid("eye",(x,-.292,2.46),(.035,.018,.045),white)
-# hoodie pocket and drawstrings
-pocket=ellipsoid("hoodie pocket",(0,-.265,1.35),(.27,.025,.12),hoodie)
-# limbs as separate articulated sections with pivot empties and child geometry
-def limb_segment(name,pivot,vec,r,mat):
- # geometry centered from pivot to pivot+vec; local mesh coordinates around pivot
- length=Vector(vec).length
- bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=r,depth=length,location=Vector(pivot)+Vector(vec)/2)
- o=bpy.context.object; o.name=name; o.rotation_mode="QUATERNION"; o.rotation_quaternion=Vector(vec).to_track_quat("Z","Y"); o.data.materials.append(mat)
- be=o.modifiers.new("rounded ends","BEVEL"); be.width=r*.85; be.segments=4; o.modifiers.new("weighted normals","WEIGHTED_NORMAL")
+def segment(name,radius,material):
+ bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=radius,depth=1)
+ o=bpy.context.object; o.name=name; o.data.materials.append(material)
+ b=o.modifiers.new("rounded joint transitions","BEVEL"); b.width=radius*.88; b.segments=5
+ o.modifiers.new("weighted normals","WEIGHTED_NORMAL")
  return o
-# For this first hybrid proof, animate limb segments with keyframed endpoint positions, avoiding broken bone-parent transforms.
-parts=[]
-def link_part(obj):
- obj.parent=root; parts.append(obj); return obj
-for ob in (torso,head,haircap,pocket): link_part(ob)
-# limbs built from capsules; endpoint coordinates are updated by frame handler below
-def make_limb(name,a,b,r,mat):
- ob=limb_segment(name,a,Vector(b)-Vector(a),r,mat); link_part(ob); return ob
-upperL=make_limb("left upper arm",(-.37,0,1.92),(-.62,0,1.48),.14,hoodie)
-foreL=make_limb("left forearm",(-.62,0,1.48),(-.58,-.01,1.08),.115,hoodie)
-upperR=make_limb("right upper arm",(.37,0,1.92),(.62,0,1.48),.14,hoodie)
-foreR=make_limb("right forearm",(.62,0,1.48),(.58,-.01,1.08),.115,hoodie)
-thighL=make_limb("left thigh",(-.19,0,1.05),(-.23,0,.55),.17,pants)
-shinL=make_limb("left shin",(-.23,0,.55),(-.23,-.02,.12),.13,pants)
-thighR=make_limb("right thigh",(.19,0,1.05),(.23,0,.55),.17,pants)
-shinR=make_limb("right shin",(.23,0,.55),(.23,-.02,.12),.13,pants)
-for x in (-.23,.23): link_part(ellipsoid("sneaker",(x,-.08,.08),(.22,.31,.12),shoes))
-# Parent all character pieces to root while retaining local positions.
-for ob in parts:
- if ob.parent is not root:
-  world=ob.matrix_world.copy(); ob.parent=root; ob.matrix_world=world
-# Animate root approach and camera push-in.
-for f,x in [(1,-1.5),(36,-.8),(72,-.25),(168,-.25)]:
- root.location.x=x; root.keyframe_insert(data_path="location",frame=f)
-# Subtle walk gait by swinging legs/arms around each object's own origin; visual action phases.
-for ob,axis,keys in [
- (thighL,"rotation_euler",[(1,(.25,0,0)),(18,(-.25,0,0)),(36,(.1,0,0)),(60,(0,0,0)),(168,(0,0,0))]),
- (thighR,"rotation_euler",[(1,(-.25,0,0)),(18,(.25,0,0)),(36,(-.1,0,0)),(60,(0,0,0)),(168,(0,0,0))]),
- (upperL,"rotation_euler",[(1,(-.2,0,0)),(18,(.2,0,0)),(36,(0,0,0)),(168,(0,0,0))]),
- (upperR,"rotation_euler",[(1,(.2,0,0)),(18,(-.2,0,0)),(36,(0,0,0)),(78,(-.65,0,0)),(110,(-.9,0,0)),(168,(-.9,0,0))]),
- (foreR,"rotation_euler",[(1,(0,0,0)),(78,(-.2,0,0)),(110,(-.45,0,0)),(168,(-.45,0,0))])]:
- for f,v in keys:
-  ob.rotation_euler=v; ob.keyframe_insert(data_path=axis,frame=f)
-# Soft lighting
-for typ,loc,power,size in [("AREA",(-3,-4,6),650,5),("AREA",(3,1,4),350,4)]:
- bpy.ops.object.light_add(type=typ,location=loc); l=bpy.context.object; l.data.energy=power; l.data.shape="DISK"; l.data.size=size; l.rotation_euler=(radians(25),0,radians(20))
-s.render.filepath=os.path.abspath(OUT+"/frame_"); s.frame_set(1)
+def place_ball(o,center):
+ o.location=center
+def place_segment(o,a,b):
+ a=Vector(a); b=Vector(b); d=b-a
+ o.location=(a+b)*.5; o.rotation_mode="QUATERNION"; o.rotation_quaternion=d.to_track_quat("Z","Y"); o.dimensions=(o.dimensions.x,o.dimensions.y,d.length)
+
+# Camera frames a large, readable character while preserving the desk in the right side of the room.
+bpy.ops.object.camera_add(location=(0,-12,2.45))
+cam=bpy.context.object; cam.data.type="ORTHO"; cam.data.ortho_scale=7.2
+cam.rotation_euler=(radians(90),0,0); s.camera=cam
+
+# Main silhouette: overlapping torso/neck/head and rounded shoulder/hip joints.
+torso=ball("continuous hoodie torso",(.43,.27,.62),hoodie)
+pelvis=ball("hip connection",(.36,.25,.25),pants)
+neck=ball("neck",(.13,.14,.16),skin)
+head=ball("head",(.30,.27,.36),skin)
+haircap=ball("messy hair",(.32,.29,.20),hair)
+fringe=ball("front hair",(.23,.10,.12),hair)
+# Face detail facing camera (-Y).
+eye1=ball("left eye",(.026,.018,.032),skin); eye2=ball("right eye",(.026,.018,.032),skin)
+# Rounded limbs built from overlapping upper/lower sections; endpoints are updated as a single kinematic pose.
+limbs={}
+for name,r,m in [
+ ("upperL",.135,hoodie),("foreL",.105,hoodie),("upperR",.135,hoodie),("foreR",.105,hoodie),
+ ("thighL",.16,pants),("shinL",.12,pants),("thighR",.16,pants),("shinR",.12,pants)]:
+ limbs[name]=segment(name,r,m)
+joints={}
+for name,r,m in [("shoulderL",.14,hoodie),("elbowL",.11,hoodie),("wristL",.085,skin),
+ ("shoulderR",.14,hoodie),("elbowR",.11,hoodie),("wristR",.085,skin),
+ ("hipL",.16,pants),("kneeL",.13,pants),("ankleL",.11,pants),
+ ("hipR",.16,pants),("kneeR",.13,pants),("ankleR",.11,pants)]:
+ joints[name]=ball(name,(r,r,r),m)
+hands=[ball("left hand",(.11,.085,.075),skin),ball("right hand",(.11,.085,.075),skin)]
+feet=[ball("left sneaker",(.22,.30,.11),shoe),ball("right sneaker",(.22,.30,.11),shoe)]
+
+def smooth(a,b,t):
+ t=max(0,min(1,t)); return a+(b-a)*(t*t*(3-2*t))
+def mix(a,b,t): return tuple(smooth(x,y,t) for x,y in zip(a,b))
+def pose(frame):
+ # Walk in toward the chair, brake, lower into a seated pose, then reach to the laptop.
+ walk=smooth(0,1,(frame-1)/48)
+ sit=smooth(0,1,(frame-68)/35)
+ rootx=-1.75+1.25*walk
+ basez=smooth(0,1,(frame-68)/35)
+ bob=(math.sin(frame*.42)*.045)*(1-sit) if frame<70 else 0
+ hipz=smooth(1.02,.88,basez)+bob
+ shoulderz=smooth(1.92,1.48,basez)+bob
+ headz=smooth(2.43,2.02,basez)+bob
+ # Feet plant during approach; seated legs bend forward with knees and shins.
+ stride=math.sin(frame*.36)*.22*(1-smooth(0,1,(frame-35)/25))
+ hipL=(rootx-.18,0,hipz); hipR=(rootx+.18,0,hipz)
+ kneeL=mix((rootx-.20,0,.55),(rootx+.12,-.02,.57),sit); kneeR=mix((rootx+.20,0,.55),(rootx+.48,-.02,.57),sit)
+ ankleL=mix((rootx-.20,-.02,.12),(rootx+.30,-.03,.12),sit); ankleR=mix((rootx+.20,-.02,.12),(rootx+.68,-.03,.12),sit)
+ if frame<70:
+  kneeL=(rootx-.20+stride,0,.55); kneeR=(rootx+.20-stride,0,.55)
+  ankleL=(rootx-.20+stride*1.3,-.02,.12); ankleR=(rootx+.20-stride*1.3,-.02,.12)
+ # torso/head positions; shoulder anchors follow torso.
+ torso.location=(rootx,0,shoulderz-.36); pelvis.location=(rootx,0,hipz)
+ neck.location=(rootx,0,headz-.39); head.location=(rootx,-.015,headz)
+ haircap.location=(rootx,.005,headz+.22); fringe.location=(rootx,-.23,headz+.14)
+ eye1.location=(rootx-.105,-.278,headz+.015); eye2.location=(rootx+.105,-.278,headz+.015)
+ # Arm movement: natural swing while walking; right hand reaches the desktop in the final beat.
+ shoulderL=(rootx-.36,0,shoulderz+.02); shoulderR=(rootx+.36,0,shoulderz+.02)
+ walkSwing=math.sin(frame*.36)*.18*(1-sit)
+ elbowL=mix((rootx-.56,0,shoulderz-.34),(rootx-.42,0,shoulderz-.30),sit)
+ wristL=mix((rootx-.50,-.02,shoulderz-.70),(rootx-.18,-.10,1.10),sit)
+ elbowR=mix((rootx+.56,0,shoulderz-.34),(rootx+.53,-.02,shoulderz-.25),sit)
+ wristR=mix((rootx+.50,-.02,shoulderz-.70),(rootx+.88,-.18,1.16),sit)
+ if frame<65:
+  elbowL=(rootx-.56,0,shoulderz-.34+walkSwing); wristL=(rootx-.50,-.02,shoulderz-.70+walkSwing)
+  elbowR=(rootx+.56,0,shoulderz-.34-walkSwing); wristR=(rootx+.50,-.02,shoulderz-.70-walkSwing)
+ for n,p in [("shoulderL",shoulderL),("elbowL",elbowL),("wristL",wristL),("shoulderR",shoulderR),("elbowR",elbowR),("wristR",wristR),
+             ("hipL",hipL),("kneeL",kneeL),("ankleL",ankleL),("hipR",hipR),("kneeR",kneeR),("ankleR",ankleR)]:
+  joints[n].location=p
+ for n,a,b in [("upperL",shoulderL,elbowL),("foreL",elbowL,wristL),("upperR",shoulderR,elbowR),("foreR",elbowR,wristR),
+               ("thighL",hipL,kneeL),("shinL",kneeL,ankleL),("thighR",hipR,kneeR),("shinR",kneeR,ankleR)]:
+  place_segment(limbs[n],a,b)
+ hands[0].location=(wristL[0],wristL[1]-.04,wristL[2]); hands[1].location=(wristR[0],wristR[1]-.04,wristR[2])
+ feet[0].location=(ankleL[0]+.08,-.12,ankleL[2]); feet[1].location=(ankleR[0]+.08,-.12,ankleR[2])
+ feet[0].rotation_euler[1]=-.08; feet[1].rotation_euler[1]=-.08
+
+# Frame handler guarantees continuous connected endpoint motion without detached object-origin rotations.
+def update(scene): pose(scene.frame_current)
+s.frame_set(1); update(s)
+if update not in bpy.app.handlers.frame_change_pre: bpy.app.handlers.frame_change_pre.append(update)
+# Soft key/fill lighting.
+for loc,power,size in [((-3,-4,6),650,5),((3,1,4),350,4)]:
+ bpy.ops.object.light_add(type="AREA",location=loc); light=bpy.context.object
+ light.data.energy=power; light.data.shape="DISK"; light.data.size=size; light.rotation_euler=(radians(25),0,radians(20))
+s.render.filepath=os.path.abspath(OUT+"/frame_")
 bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath("renders/hybrid-character.blend"))
 bpy.ops.render.render(animation=True)
 print("HYBRID_CHARACTER_PASS_COMPLETE")
-
-# Re-run after adding missing EGL runtime libraries.
