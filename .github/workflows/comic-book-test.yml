@@ -3,7 +3,7 @@ on:
   push:
     branches: [experiment/comic-book-engine]
     paths:
-      - 'prototype/comic_book_benchmark.py'
+      - 'prototype/comic_page_engine.py'
       - '.github/workflows/comic-book-test.yml'
   workflow_dispatch:
 permissions:
@@ -14,20 +14,20 @@ concurrency:
 jobs:
   render-comic:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Install rendering and narration tools
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pil ffmpeg espeak-ng
-      - name: Generate narration
+      - name: Generate six-scene narration
         run: |
           mkdir -p renders/comic
-          espeak-ng -v en-us -s 138 -w renders/comic/narration.wav "You sit down to focus and finally find your rhythm. Then your phone lights up with one tiny notification. Your hand reaches for it before you even decide. A moment later your attention has drifted away."
-      - name: Render illustrated comic frames and compose narration
+          espeak-ng -v en-us -s 132 -w renders/comic/narration.wav "You promise yourself just ten minutes of focused work. A notification flashes while the room stays quiet. Outside, every screen competes for your attention. You return to work, but your mind keeps checking. One glance becomes a chain of tiny distractions. You put the phone away and choose what matters."
+      - name: Render illustrated comic pages and compose narration
         run: |
-          python3 prototype/comic_book_benchmark.py
+          python3 prototype/comic_page_engine.py
           ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate -of json renders/wise-lab-comic-20sec.mp4 > renders/wise-lab-comic-report.json
       - name: Upload comic-book MP4 only
         uses: actions/upload-artifact@v4
