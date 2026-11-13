@@ -62,8 +62,6 @@ def background(kind,t):
         rr(d,(1090,385,1135,430),"#e8dfcf",INK,3,7); ellipse(d,(1122,394,1150,424),"#e8dfcf",INK,3)
         line(d,[(1155,400),(1168,315),(1200,300)],"#d7c7a9",10)
         poly(d,[(1170,287),(1235,287),(1220,325),(1180,325)],"#f1d39b",INK,3)
-        rr(d,(685,380,727,433),"#101923","#d9e8e8",3,8)
-        rr(d,(690,386,722,423),"#263f53",None,0,5)
         if kind=="bedroom_close":
             for k in range(3):
                 a=1+0.12*math.sin(t*11+k)
@@ -153,7 +151,7 @@ def phone(d,x,y,scale=1,glow=0):
     if glow>0:
         for k in range(3):
             r=(1+k*.28+glow*.12)*s
-            ellipse(d,(x-25*r,y-48*r,x+25*r,y+48*r),"#f1c66a",None,0)
+            ellipse(d,(x-25*r,y-48*r,x+25*r,y+48*r),None,"#f1c66a",3)
     rr(d,(int(x-22*s),int(y-42*s),int(x+22*s),int(y+42*s)),"#101923","#e2ece7",4,8)
     rr(d,(int(x-16*s),int(y-32*s),int(x+16*s),int(y+29*s)),"#6caec0",None,0,4)
     rr(d,(int(x-12*s),int(y-25*s),int(x+12*s),int(y-8*s)),"#d9e6df",None,0,3)
@@ -163,14 +161,14 @@ def draw_frame(t,idx,local):
     kind=SCENES[idx][2]; im=background(kind,t); d=ImageDraw.Draw(im)
     if idx==0:
         rr(d,(300,475,445,520),"#6c5548",INK,5,12); line(d,[(330,510),(320,650)],"#463b35",12); line(d,[(420,510),(438,650)],"#463b35",12)
-        phone_x,phone_y=706,405; r=ease((local-.36)/.34)
-        hand=lerp((550,382),(phone_x-2,phone_y+8),r)
-        draw_character(d,360,650,1.12,"sit",t,hand)
+        phone_x,phone_y=650,405; r=ease((local-.36)/.34)
+        hand=lerp((614,361),(phone_x-2,phone_y+8),r)
+        draw_character(d,430,650,1.12,"sit",t,hand)
         if local>.38: phone(d,phone_x,phone_y,1.0,clamp((local-.38)*2))
         if local<.4:
             for k in range(3): line(d,[(850+k*34,375),(865+k*34,375)],"#d8e9e6",2)
     elif idx==1:
-        draw_character(d,385,770,1.42,"sit",t,(650,455))
+        draw_character(d,480,770,1.42,"sit",t,(690,435))
         phone(d,760,410,1.85,.8+.2*math.sin(t*12))
         for k in range(8):
             a=k*math.pi/4; x=760+math.cos(a)*78; y=410+math.sin(a)*105
@@ -185,11 +183,11 @@ def draw_frame(t,idx,local):
         for k in range(7):
             x=(k*190-int(t*90))%W; line(d,[(x,110),(x+55,110)],"#d5e2d8",2)
     else:
-        phone_x,phone_y=900,430
+        phone_x,phone_y=800,430
         r=ease(local/.48)
         hand=lerp((540,410),(phone_x-4,phone_y+10),r) if local<.58 else lerp((phone_x-4,phone_y+10),(530,410),ease((local-.58)/.3))
-        xshift=int(40*ease((local-.62)/.38))
-        draw_character(d,405+xshift,650,1.08,"walk" if local>.68 else "stand",t,hand)
+        xshift=int(32*ease((local-.62)/.38))
+        draw_character(d,600+xshift,650,1.08,"walk" if local>.68 else "stand",t,hand)
         phone(d,phone_x,phone_y,1.0,.1)
     d.rectangle((0,0,W,22),fill="#111923"); d.rectangle((0,H-18,W,H),fill="#111923")
     rr(d,(38,38,315,82),"#f2e5cf",INK,3,7)
