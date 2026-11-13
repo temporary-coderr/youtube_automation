@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: blender-benchmark-\${{ github.ref }}
+  group: blender-benchmark-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   render:
@@ -23,7 +23,7 @@ jobs:
       - name: Install Blender and FFmpeg
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender ffmpeg espeak-ng
+          sudo apt-get install -y blender ffmpeg espeak-ng libegl1 libgl1 libx11-6 libxi6 libxrender1 libxfixes3 libxkbcommon0
           blender --version | head -n 2
           ffmpeg -version | head -n 2
       - name: Render 15-second Blender scene
@@ -46,7 +46,7 @@ jobs:
       - name: Upload Blender benchmark
         uses: actions/upload-artifact@v4
         with:
-          name: wise-lab-blender-benchmark-\${{ github.run_number }}
+          name: wise-lab-blender-benchmark-${{ github.run_number }}
           path: |
             renders/blender-benchmark-narrated.mp4
             renders/blender-benchmark.mp4
