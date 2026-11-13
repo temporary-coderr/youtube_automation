@@ -135,7 +135,7 @@ def render(t,idx,local):
   rr(d,(760,405,830,505),"#111923","#dce9e9",5,12); d.rectangle((770,420,820,485),fill="#65abc2")
   bubble(d,(560,105,1090,205),"Just ten more minutes...","right")
  elif idx==1:
-  rr(d,(450,55,1195,625),"#f3e7d3",INK,10,5); person(d,820,610,1.65,"phone",t,side=True)
+  rr(d,(450,55,1195,625),"#f3e7d3",INK,10,5); person(d,820,735,1.45,"phone",t,side=True)
   for a in range(0,360,45):
    q=math.radians(a); ln(d,[(1040+math.cos(q)*45,280+math.sin(q)*45),(1040+math.cos(q)*78,280+math.sin(q)*78)],"#f4d06f",5)
   bubble(d,(70,95,470,215),"What's that sound?","right")
@@ -144,7 +144,7 @@ def render(t,idx,local):
   person(d,335,595,1.05,"phone",t,side=True); person(d,945,595,1.05,"sit",t,coat="#8a594f")
   bubble(d,(700,105,1165,205),"You said you were listening.","left")
  else:
-  rr(d,(80,60,1200,625),"#f4ead8",INK,10,5); person(d,440,600,1.45,"neutral",t)
+  rr(d,(80,60,1200,625),"#f4ead8",INK,10,5); person(d,440,700,1.25,"neutral",t)
   rr(d,(820,435,900,495),"#111923","#dce9e9",4,9); d.rectangle((829,444,891,483),fill="#4e8497")
   bubble(d,(660,100,1120,205),"Not every moment needs a screen.","left")
  rr(d,(30,22,365,70),"#f8edda",INK,4,8); d.text((48,35),SCENES[idx][0],font=FS,fill=INK)
@@ -157,7 +157,7 @@ def render(t,idx,local):
 def main():
  narration=" ".join(s[1] for s in SCENES); wav="renders/reference-narration.wav"
  subprocess.run(["espeak-ng","-v","en-us","-s","145","-w",wav,narration],check=True)
- proc=subprocess.Popen(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s",f"{W}x{H}","-r",str(FPS),"-i","-","-i",wav,"-c:v","libx264","-preset","veryfast","-crf","19","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k","-shortest","renders/wise-lab-reference-style-18sec.mp4"],stdin=subprocess.PIPE)
+ proc=subprocess.Popen(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s",f"{W}x{H}","-r",str(FPS),"-i","-","-i",wav,"-c:v","libx264","-preset","veryfast","-crf","19","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k","-af","apad","-t",str(DURATION),"renders/wise-lab-reference-style-18sec.mp4"],stdin=subprocess.PIPE)
  for f in range(DURATION*FPS):
   t=f/FPS; idx=min(3,int(t/(DURATION/4))); local=(t-idx*(DURATION/4))/(DURATION/4)
   frame=render(t,idx,local); zoom=1+0.025*local; cw,ch=int(W/zoom),int(H/zoom)
