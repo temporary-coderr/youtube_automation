@@ -72,6 +72,9 @@ jobs:
             --height "${{ steps.profile.outputs.height }}" \
             --duration "${{ steps.profile.outputs.duration }}" \
             --fps 24 --output renders/cinematic-preview.mp4
+      - name: Build visual contact sheet
+        run: |
+          ffmpeg -hide_banner -loglevel error -y -i renders/cinematic-preview.mp4 -vf "fps=1/2,scale=640:-1,tile=3x2" -frames:v 1 renders/cinematic-contact-sheet.jpg
       - name: Upload preview and QA report
         uses: actions/upload-artifact@v4
         with:
@@ -79,5 +82,6 @@ jobs:
           path: |
             renders/cinematic-preview.mp4
             renders/cinematic-preview.report.json
+            renders/cinematic-contact-sheet.jpg
           if-no-files-found: error
           retention-days: 14
