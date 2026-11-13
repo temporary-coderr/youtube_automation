@@ -157,16 +157,22 @@ def render(t,idx,local):
 def main():
  narration=" ".join(s[1] for s in SCENES); wav="renders/reference-narration.wav"
  subprocess.run(["espeak-ng","-v","en-us","-s","145","-w",wav,narration],check=True)
- proc=subprocess.Popen(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s",f"{W}x{H}","-r",str(FPS),"-i","-","-i",wav,"-c:v","libx264","-preset","veryfast","-crf","19","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k","-af","apad","-t",str(DURATION),"renders/wise-lab-reference-style-18sec.mp4"],stdin=subprocess.PIPE)
- for f in range(DURATION*FPS):
-  t=f/FPS; idx=min(3,int(t/(DURATION/4))); local=(t-idx*(DURATION/4))/(DURATION/4)
-  frame=render(t,idx,local); zoom=1+0.025*local; cw,ch=int(W/zoom),int(H/zoom)
-  px=int((W-cw)*([.2,.65,.4,.55][idx])); py=int((H-ch)*.45)
-  frame=frame.crop((px,py,px+cw,py+ch)).resize((W,H),Image.Resampling.LANCZOS)
-  if local<.08 and idx>0: frame=Image.blend(frame,Image.new("RGB",(W,H),"white"),.35*(1-local/.08))
-  proc.stdin.write(frame.tobytes())
- proc.stdin.close(); code=proc.wait()
- if code: raise RuntimeError(f"ffmpeg exited {code}")
+ proc=subprocess.Popen(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s",f"{W}x{H}","-r",str(FPS),"-i","-","-i",wav,"-c:v","libx264","-preset","veryfast","-crf","19","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k","-af","apad","-t",str(DURATION),"renders/wise-lab-reference-style-18sec.mp4"],stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+ try:
+  for f in range(DURATION*FPS):
+   t=f/FPS; idx=min(3,int(t/(DURATION/4))); local=(t-idx*(DURATION/4))/(DURATION/4)
+   frame=render(t,idx,local); zoom=1+0.025*local; cw,ch=int(W/zoom),int(H/zoom)
+   px=int((W-cw)*([.2,.65,.4,.55][idx])); py=int((H-ch)*.45)
+   frame=frame.crop((px,py,px+cw,py+ch)).resize((W,H),Image.Resampling.LANCZOS)
+   if local<.08 and idx>0: frame=Image.blend(frame,Image.new("RGB",(W,H),"white"),.35*(1-local/.08))
+   proc.stdin.write(frame.tobytes())
+ except BrokenPipeError:
+  pass
+ finally:
+  if proc.stdin and not proc.stdin.closed: proc.stdin.close()
+ stderr=proc.stderr.read().decode("utf-8","replace")
+ code=proc.wait()
+ if code: raise RuntimeError(f"ffmpeg exited {code}: {stderr[-5000:]}")
  print(f"Rendered {DURATION*FPS} frames, four reference-style comic beats")
 if __name__=="__main__": main()
 
