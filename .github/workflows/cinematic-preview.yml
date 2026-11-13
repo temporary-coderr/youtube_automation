@@ -1,0 +1,81 @@
+name: Cinematic Engine Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: "Preview duration in seconds (prototype is 12 seconds)"
+        required: true
+        default: "12"
+      format:
+        description: "Output format"
+        required: true
+        type: choice
+        options:
+          - landscape
+          - vertical
+        default: landscape
+  push:
+    branches:
+      - feature/cinematic-engine
+    paths:
+      - "engine/**"
+      - "prototype/**"
+      - ".github/workflows/cinematic-preview.yml"
+      - "requirements.txt"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cinematic-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version | head -n 2
+      - name: Install browser renderer
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+      - name: Select render profile
+        id: profile
+        shell: bash
+        run: |
+          if [ "${{ inputs.format }}" = "vertical" ]; then
+            echo "width=720" >> "$GITHUB_OUTPUT"
+            echo "height=1280" >> "$GITHUB_OUTPUT"
+          else
+            echo "width=1280" >> "$GITHUB_OUTPUT"
+            echo "height=720" >> "$GITHUB_OUTPUT"
+          fi
+          echo "duration=${{ inputs.duration || '12' }}" >> "$GITHUB_OUTPUT"
+      - name: Render and validate MP4
+        run: |
+          python engine/render_prototype.py \
+            --width "${{ steps.profile.outputs.width }}" \
+            --height "${{ steps.profile.outputs.height }}" \
+            --duration "${{ steps.profile.outputs.duration }}" \
+            --fps 24 --output renders/cinematic-preview.mp4
+      - name: Upload preview and QA report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinematic-preview-${{ github.run_number }}
+          path: |
+            renders/cinematic-preview.mp4
+            renders/cinematic-preview.report.json
+          if-no-files-found: error
+          retention-days: 14
