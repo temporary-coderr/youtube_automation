@@ -64,14 +64,20 @@ jobs:
             echo "height=720" >> "$GITHUB_OUTPUT"
           fi
           echo "duration=${{ inputs.duration || '120' }}" >> "$GITHUB_OUTPUT"
+      - name: Generate narration audio
+        run: |
+          mkdir -p renders
+          espeak-ng -v en-us -s 132 -p 42 -a 165 -f content/attention-trap-narration.txt -w renders/narration-raw.wav
+          ffmpeg -hide_banner -loglevel error -y -i renders/narration-raw.wav -af "loudnorm,apad" -t "${{ steps.profile.outputs.duration }}" -ar 48000 -ac 2 renders/narration.wav
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 renders/narration.wav
       - name: Render and validate MP4
         run: |
           python engine/render_prototype.py \
-            --html prototype/rig-benchmark-v2.html \
+            --html prototype/attention-trap-2min.html \
             --width "${{ steps.profile.outputs.width }}" \
             --height "${{ steps.profile.outputs.height }}" \
             --duration "${{ steps.profile.outputs.duration }}" \
-            --fps 24 --output renders/cinematic-preview.mp4
+            --fps 24 --audio renders/narration.wav --output renders/cinematic-preview.mp4
       - name: Build visual contact sheet
         run: |
           ffmpeg -hide_banner -loglevel error -y -i renders/cinematic-preview.mp4 -vf "fps=1/20,scale=640:-1,tile=3x2" -frames:v 1 renders/cinematic-contact-sheet.jpg
