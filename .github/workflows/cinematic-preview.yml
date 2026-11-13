@@ -33,7 +33,8 @@ concurrency:
 
 jobs:
   render:
-    runs-on: ubuntu-latest
+    # Avoid ubuntu-latest silently moving to an OS unsupported by our pinned Playwright.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
