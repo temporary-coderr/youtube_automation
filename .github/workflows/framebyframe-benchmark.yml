@@ -1,0 +1,37 @@
+name: Frame-by-Frame Animation Benchmark
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/cinematic-engine]
+    paths:
+      - 'prototype/framebyframe_benchmark.py'
+      - '.github/workflows/framebyframe-benchmark.yml'
+permissions:
+  contents: read
+concurrency:
+  group: framebyframe-benchmark-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install renderer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg python3-pil
+      - name: Render 12-second frame-by-frame test
+        run: |
+          mkdir -p renders
+          python3 prototype/framebyframe_benchmark.py
+      - name: Create contact sheet
+        run: ffmpeg -y -i renders/framebyframe-benchmark.mp4 -vf "fps=1,scale=320:-1,tile=4x3" -frames:v 1 renders/framebyframe-contact-sheet.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-framebyframe-${{ github.run_number }}
+          path: |
+            renders/framebyframe-benchmark.mp4
+            renders/framebyframe-contact-sheet.jpg
+          if-no-files-found: error
+          retention-days: 7
