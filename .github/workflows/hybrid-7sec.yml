@@ -20,7 +20,7 @@ jobs:
       - name: Install Blender and image tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender ffmpeg python3-pil python3-cairosvg
+          sudo apt-get install -y blender ffmpeg python3-pil python3-cairosvg libegl1 libgl1 libx11-6 libxi6 libxrender1 libxfixes3 libxkbcommon0
       - name: Create illustrated bedroom background and props
         run: |
           mkdir -p renders/background renders/character renders/final
@@ -79,14 +79,8 @@ jobs:
         with:
           name: wise-lab-hybrid-7sec-${{ github.run_number }}
           path: |
-            renders/background/*
-            renders/character/*.png
-            renders/final/*.jpg
             renders/wise-lab-hybrid-7sec.mp4
-            renders/wise-lab-hybrid-contact.jpg
-            renders/wise-lab-hybrid-report.json
-            renders/hybrid-character.blend
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
 
 # Trigger hybrid benchmark workflow on this commit.
