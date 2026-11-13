@@ -67,6 +67,7 @@ jobs:
       - name: Render and validate MP4
         run: |
           python engine/render_prototype.py \
+            --html prototype/animation-benchmark.html \
             --width "${{ steps.profile.outputs.width }}" \
             --height "${{ steps.profile.outputs.height }}" \
             --duration "${{ steps.profile.outputs.duration }}" \
