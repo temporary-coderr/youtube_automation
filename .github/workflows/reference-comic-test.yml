@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: wise-reference-comic-${{ github.ref }}
+  group: wise-reference-comic-${{ github.run_id }}
   cancel-in-progress: false
 jobs:
   render-reference-comic:
