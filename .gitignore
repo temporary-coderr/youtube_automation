@@ -1,5 +1,0 @@
-# Mixamo raw source files: keep out of Git and never redistribute standalone
-assets/mixamo/*.fbx
-assets/mixamo/**/*.fbx
-assets/mixamo/*.zip
-assets/mixamo/**/*.zip
