@@ -1,0 +1,95 @@
+{
+  "title": "The Attention Trap",
+  "duration_seconds": 120,
+  "fps": 24,
+  "scenes": [
+    {
+      "id": "city_walk",
+      "start": 0,
+      "end": 20,
+      "location": "rainy evening city sidewalk",
+      "action": "main character walks left-to-right; background parallax; phone notification glows on nearby storefront display",
+      "camera": "slow lateral tracking shot",
+      "props": [
+        "street_lamp",
+        "shop_windows",
+        "rain_streaks",
+        "phone"
+      ]
+    },
+    {
+      "id": "phone_reach",
+      "start": 20,
+      "end": 40,
+      "location": "city bus stop",
+      "action": "character stops, shifts weight, turns torso, bends elbow and reaches to pick up phone; phone attaches to palm on contact",
+      "camera": "medium push-in",
+      "props": [
+        "bench",
+        "bus_stop_sign",
+        "phone",
+        "backpack"
+      ]
+    },
+    {
+      "id": "quiet_room",
+      "start": 40,
+      "end": 60,
+      "location": "small apartment at night",
+      "action": "character sits on bed edge, looks at lit phone, lowers it and places it face down on table",
+      "camera": "slow over-shoulder pan",
+      "props": [
+        "bed",
+        "side_table",
+        "lamp",
+        "phone",
+        "window"
+      ]
+    },
+    {
+      "id": "focus_desk",
+      "start": 60,
+      "end": 80,
+      "location": "warm desk workspace",
+      "action": "character stands, moves phone out of reach, sits at desk, opens notebook and begins writing",
+      "camera": "gentle push from wide to medium",
+      "props": [
+        "desk",
+        "chair",
+        "notebook",
+        "pen",
+        "desk_lamp",
+        "phone",
+        "mug"
+      ]
+    },
+    {
+      "id": "park_reset",
+      "start": 80,
+      "end": 100,
+      "location": "quiet green park morning",
+      "action": "character walks, pauses, takes a breath, relaxes shoulders and resumes walking",
+      "camera": "side tracking with foreground tree parallax",
+      "props": [
+        "trees",
+        "bench",
+        "path",
+        "birds"
+      ]
+    },
+    {
+      "id": "sunset_walk",
+      "start": 100,
+      "end": 120,
+      "location": "open rooftop at sunset",
+      "action": "character walks toward warm horizon; camera slowly pulls back; title resolves at end",
+      "camera": "slow cinematic pullback",
+      "props": [
+        "rooftop_wall",
+        "city_silhouette",
+        "sun",
+        "title"
+      ]
+    }
+  ]
+}
