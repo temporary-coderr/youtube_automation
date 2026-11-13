@@ -278,7 +278,8 @@ def main():
     wav=OUT+"/narration.wav"
     with wave.open(wav,"rb") as wf: duration=wf.getnframes()/wf.getframerate()
     page_dur=DURATION/len(PAGES)
-    duration=DURATION\n    total=math.ceil(duration*FPS)
+    duration=DURATION
+    total=math.ceil(duration*FPS)
     prev=None
     for f in range(total):
         t=f/FPS
