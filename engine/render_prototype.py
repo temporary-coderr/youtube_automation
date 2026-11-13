@@ -21,6 +21,18 @@ async def render_frames(html: Path, frame_dir: Path, width: int, height: int, fp
         page.set_default_timeout(30_000)
         await page.goto(html.resolve().as_uri(), wait_until="load")
         await page.wait_for_function("typeof window.renderAt === 'function'")
+        # The source scene is authored in 16:9. For portrait output, use a real
+        # center crop around the lead character instead of squashing the artwork.
+        if height > width:
+            crop_width = 1080 * width / height
+            crop_x = 720 - crop_width / 2
+            await page.evaluate("""({x, w}) => {
+                const frame = document.getElementById('frame');
+                const svg = document.querySelector('svg');
+                frame.style.width = '100vw';
+                frame.style.height = '100vh';
+                svg.setAttribute('viewBox', x + ' 0 ' + w + ' 1080');
+            }""", {"x": crop_x, "w": crop_width})
         await page.add_style_tag(content="*,*::before,*::after{animation:none!important;transition:none!important;}")
         for index in range(total):
             timestamp = index / fps
