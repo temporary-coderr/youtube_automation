@@ -200,10 +200,14 @@ def pose(frame):
  # Brief notification pulse and restrained vibration; the phone remains planted on the desk.
  alert=smooth(0,1,(frame-112)/7)*(1-smooth(0,1,(frame-139)/8))
  pulse=.72+.28*(.5+.5*math.sin(frame*.48))
- phoneUI.node_tree.nodes.get("Principled BSDF").inputs["Emission Color"].default_value=(.08,.42,.55,1)
- phoneUI.node_tree.nodes.get("Principled BSDF").inputs["Emission"].default_value=.18*alert*pulse
- phoneGlow.node_tree.nodes.get("Principled BSDF").inputs["Emission Color"].default_value=(.10,.75,.95,1)
- phoneGlow.node_tree.nodes.get("Principled BSDF").inputs["Emission"].default_value=.45*alert*pulse
+ def set_emission(material, color, strength):
+  bs=material.node_tree.nodes.get("Principled BSDF")
+  color_socket=bs.inputs.get("Emission Color") or bs.inputs.get("Emission")
+  strength_socket=bs.inputs.get("Emission Strength")
+  if color_socket: color_socket.default_value=(*color,1)
+  if strength_socket: strength_socket.default_value=strength
+ set_emission(phoneUI,(.08,.42,.55),.18*alert*pulse)
+ set_emission(phoneGlow,(.10,.75,.95),.45*alert*pulse)
  phoneBadge.scale=(.025,.012,.025) if alert>.05 else (.001,.001,.001)
  phoneBody.rotation_euler[1]=.018*math.sin(frame*2.4)*alert
  phoneGlass.rotation_euler[1]=phoneBody.rotation_euler[1]
