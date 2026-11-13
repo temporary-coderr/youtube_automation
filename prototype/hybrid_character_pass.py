@@ -224,7 +224,20 @@ def pose(frame):
  phoneLight.data.energy=18*alert*pulse
 
 # Frame handler guarantees continuous connected endpoint motion without detached object-origin rotations.
-def update(scene): pose(scene.frame_current)
+def update(scene):
+    frame=scene.frame_current
+    pose(frame)
+    # Subtle cinematic camera drift: establish the room, then favor the character
+    # and finally the phone interaction without abrupt cuts or jitter.
+    approach=smooth(0,1,(frame-1)/72)
+    focus=smooth(0,1,(frame-150)/54)
+    settle=smooth(0,1,(frame-220)/20)
+    cam.data.ortho_scale=8.2-0.28*approach-0.18*focus+0.06*settle
+    cam.location.x=-4.2+0.10*math.sin(frame/58.0)+0.22*focus
+    target_x=0.35+0.16*focus
+    target_z=1.62+0.025*math.sin(frame/75.0)
+    target=Vector((target_x,0,target_z))
+    cam.rotation_euler=(target-Vector(cam.location)).to_track_quat("-Z","Y").to_euler()
 s.frame_set(1); update(s)
 if update not in bpy.app.handlers.frame_change_pre: bpy.app.handlers.frame_change_pre.append(update)
 # Soft key/fill lighting.
