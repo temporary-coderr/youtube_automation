@@ -88,3 +88,5 @@ jobs:
             renders/hybrid-character.blend
           if-no-files-found: warn
           retention-days: 7
+
+# Trigger hybrid benchmark workflow on this commit.
