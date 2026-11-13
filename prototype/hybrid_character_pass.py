@@ -79,3 +79,5 @@ s.render.filepath=os.path.abspath(OUT+"/frame_"); s.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath("renders/hybrid-character.blend"))
 bpy.ops.render.render(animation=True)
 print("HYBRID_CHARACTER_PASS_COMPLETE")
+
+# Re-run after adding missing EGL runtime libraries.
