@@ -1,0 +1,93 @@
+name: Cinematic Engine Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: "Preview duration in seconds"
+        required: true
+        default: "120"
+      format:
+        description: "Output format"
+        required: true
+        type: choice
+        options:
+          - landscape
+          - vertical
+        default: landscape
+  push:
+    branches:
+      - feature/cinematic-engine
+    paths:
+      - "engine/**"
+      - "prototype/**"
+      - ".github/workflows/cinematic-preview.yml"
+      - "requirements.txt"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cinematic-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    # Avoid ubuntu-latest silently moving to an OS unsupported by our pinned Playwright.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg espeak-ng
+          ffmpeg -version | head -n 2
+      - name: Install browser renderer
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+      - name: Select render profile
+        id: profile
+        shell: bash
+        run: |
+          if [ "${{ inputs.format }}" = "vertical" ]; then
+            echo "width=720" >> "$GITHUB_OUTPUT"
+            echo "height=1280" >> "$GITHUB_OUTPUT"
+          else
+            echo "width=1280" >> "$GITHUB_OUTPUT"
+            echo "height=720" >> "$GITHUB_OUTPUT"
+          fi
+          echo "duration=${{ inputs.duration || '120' }}" >> "$GITHUB_OUTPUT"
+      - name: Generate narration audio
+        run: |
+          mkdir -p renders
+          espeak-ng -v en-us -s 132 -p 42 -a 165 -f content/attention-trap-narration.txt -w renders/narration-raw.wav
+          ffmpeg -hide_banner -loglevel error -y -i renders/narration-raw.wav -af "loudnorm,apad" -t "${{ steps.profile.outputs.duration }}" -ar 48000 -ac 2 renders/narration.wav
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 renders/narration.wav
+      - name: Render and validate MP4
+        run: |
+          python engine/render_prototype.py \
+            --html prototype/attention-trap-2min.html \
+            --width "${{ steps.profile.outputs.width }}" \
+            --height "${{ steps.profile.outputs.height }}" \
+            --duration "${{ steps.profile.outputs.duration }}" \
+            --fps 24 --audio renders/narration.wav --output renders/cinematic-preview.mp4
+      - name: Build visual contact sheet
+        run: |
+          ffmpeg -hide_banner -loglevel error -y -i renders/cinematic-preview.mp4 -vf "fps=1/20,scale=640:-1,tile=3x2" -frames:v 1 renders/cinematic-contact-sheet.jpg
+      - name: Upload preview and QA report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinematic-preview-${{ github.run_number }}
+          path: |
+            renders/cinematic-preview.mp4
+            renders/cinematic-preview.report.json
+            renders/cinematic-contact-sheet.jpg
+          if-no-files-found: error
+          retention-days: 14

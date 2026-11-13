@@ -1,0 +1,71 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090f1b}canvas{width:100vw;height:100vh;display:block}</style></head>
+<body><canvas id="c" width="1920" height="1080"></canvas><script>
+const c=document.querySelector('#c'),g=c.getContext('2d'),W=1920,H=1080,TAU=Math.PI*2;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t,ease=t=>(t=clamp(t,0,1),t*t*(3-2*t));
+function line(a,b,w,col){g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.lineJoin='round';g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke()}
+function oval(x,y,rx,ry,col){g.fillStyle=col;g.beginPath();g.ellipse(x,y,rx,ry,0,0,TAU);g.fill()}
+function round(x,y,w,h,r,col){g.fillStyle=col;g.beginPath();g.roundRect(x,y,w,h,r);g.fill()}
+function poly(points,col){g.fillStyle=col;g.beginPath();points.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));g.closePath();g.fill()}
+function solve(A,B,L1,L2,side){let dx=B.x-A.x,dy=B.y-A.y,d=Math.max(1,Math.hypot(dx,dy)),D=clamp(d,Math.abs(L1-L2)+.01,L1+L2-.01),along=(L1*L1-L2*L2+D*D)/(2*D),h=Math.sqrt(Math.max(0,L1*L1-along*along)),ux=dx/d,uy=dy/d;return{x:A.x+ux*along-uy*h*side,y:A.y+uy*along+ux*h*side}}
+function limb(a,b,c,w1,w2,col){line(a,b,w1,col);line(b,c,w2,col);oval(a.x,a.y,w1*.51,w1*.51,col);oval(b.x,b.y,w1*.48,w1*.48,col)}
+function backdrop(scene,t){let sky=g.createLinearGradient(0,0,0,H);let stops=scene===0?['#101b32','#42566b','#b77c6c']:scene===1?['#101a2a','#283c4d','#111c2a']:['#18283a','#64727b','#b28b76'];stops.forEach((v,i)=>sky.addColorStop(i/2,v));g.fillStyle=sky;g.fillRect(0,0,W,H);
+ if(scene===0){for(let i=0;i<13;i++){let x=i*165-40,h=250+(i*83%270);round(x,680-h,130,h+240,5,'#17263b');for(let y=700-h;y<850;y+=48)for(let xx=x+18;xx<x+110;xx+=35)round(xx,y,10,17,2,'#d9b18a66')}g.fillStyle='#263849';g.fillRect(0,820,W,260);for(let i=0;i<85;i++){let x=(i*193+t*115)%W,y=(i*107+t*210)%830;line({x,y},{x:x-18,y:y+48},2,'#c9d9e766')}}
+ if(scene===1){g.fillStyle='#1b2939';g.fillRect(0,170,W,650);round(130,220,560,470,12,'#34495a');round(150,240,520,430,6,'#182b3d');g.fillStyle='#e9b78c';g.fillRect(164,620,492,12);round(1260,300,430,390,18,'#394858');round(0,820,W,260,0,'#172839');}
+ if(scene===2){g.fillStyle='#405264';g.fillRect(0,0,W,810);for(let i=0;i<8;i++){let x=i*260+80;round(x,110,190,470,8,'#1d2e40');round(x+14,126,162,438,4,'#9bb9bd22')}g.fillStyle='#26384a';g.fillRect(0,820,W,260)}
+ let floor=g.createLinearGradient(0,820,0,H);floor.addColorStop(0,'#48505a');floor.addColorStop(1,'#111a27');g.fillStyle=floor;g.fillRect(0,820,W,260);
+}
+function phone(x,y,angle=0){g.save();g.translate(x,y);g.rotate(angle);round(-24,-45,48,90,9,'#0b1421');round(-18,-37,36,73,5,'#9ce5d4');round(-7,31,14,3,2,'#203a45');g.restore()}
+function character(x,ground,t,mode,phase,phoneHeld){
+ // local origin at pelvis; all joints share a rig hierarchy and feet use stance locks.
+ const walk=mode==='walk',reach=mode==='reach',settle=mode==='settle';
+ const cycle=phase*TAU, stride=walk?Math.sin(cycle):0;
+ const rootBob=walk?Math.abs(Math.sin(cycle))*5:0;
+ const pelvis={x:0,y:-310+rootBob};
+ const torsoLean=reach?-.13*phase:walk?-.025*stride:0;
+ const shoulder={x:pelvis.x+Math.sin(t*1.7)*2,y:pelvis.y-145};
+ const head={x:shoulder.x+Math.sin(t*1.7)*2,y:shoulder.y-78};
+ const neck={x:shoulder.x,y:shoulder.y-35};
+ // planted feet alternate stance and swing. During stance, world x is locked to its touchdown location.
+ const step=walk?Math.floor(phase*2):0, u=walk?(phase*2-step):0;
+ function foot(side){if(!walk)return{x:side*39,y:ground-8};let isSwing=(side<0?u<.5:u>=.5);let localU=side<0?u*2:(u-.5)*2;localU=clamp(localU,0,1);let anchor=side<0?-68:68;let sx=anchor+(side<0?step%2:-(step%2))*112; if(!isSwing)return{x:sx,y:ground-8};return{x:mix(sx-56,sx+56,ease(localU)),y:ground-8-Math.sin(localU*Math.PI)*46};}
+ const lf=foot(-1),rf=foot(1);
+ const hipL={x:-36,y:pelvis.y+8},hipR={x:36,y:pelvis.y+8};
+ const kneeL=solve(hipL,lf,118,120,1),kneeR=solve(hipR,rf,118,120,-1);
+ // shoes under legs
+ limb(hipL,kneeL,lf,42,34,'#202d40');limb(hipR,kneeR,rf,42,34,'#26364b');
+ round(lf.x-43,lf.y-11,78,25,11,'#101a29');round(rf.x-43,rf.y-11,78,25,11,'#101a29');
+ // torso and hoodie, rotated around pelvis to keep shoulder alignment
+ g.save();g.translate(pelvis.x,pelvis.y);g.rotate(torsoLean);
+ poly([{x:-70,y:-8},{x:-62,y:-116},{x:-52,y:-169},{x:52,y:-169},{x:66,y:-116},{x:72,y:-8},{x:0,y:12}], '#26384d');
+ poly([{x:-40,y:-156},{x:0,y:-135},{x:40,y:-156},{x:50,y:-12},{x:0,y:0},{x:-50,y:-12}], '#344a61');
+ // hood and drawstrings
+ oval(0,-166,49,17,'#1c2a3b');line({x:-10,y:-128},{x:-5,y:-78},3,'#81909c');line({x:10,y:-128},{x:5,y:-78},3,'#81909c');
+ const shL={x:-53,y:-143},shR={x:53,y:-143};
+ const idleL={x:-105+stride*20,y:-48+Math.abs(stride)*8};
+ const target={x:142,y:-12};
+ const handR=reach?{x:mix(92, target.x,phase),y:mix(-58,target.y,phase)}:phoneHeld?{x:98,y:-62}:{x:102-stride*24,y:-54+Math.abs(stride)*9};
+ const elbowL=solve(shL,idleL,86,91,1),elbowR=solve(shR,handR,112,112,-1);
+ limb(shL,elbowL,idleL,32,25,'#30445a');limb(shR,elbowR,handR,34,26,'#a96f55');
+ oval(idleL.x,idleL.y,15,17,'#a96f55');oval(handR.x,handR.y,16,17,'#b67b5e');
+ if(reach||phoneHeld){let p=reach?{x:mix(220,handR.x+4,phase),y:mix(-15,handR.y+20,phase)}:{x:handR.x+8,y:handR.y+23};phone(p.x,p.y,-.12)}
+ g.restore();
+ // neck/head remain attached to torso's shoulder pivot
+ g.save();g.translate(shoulder.x,shoulder.y);g.rotate(torsoLean*.55);
+ round(-19,-42,38,42,11,'#a96f55');oval(0,-87,57,67,'#b98265');
+ // hair silhouette
+ g.beginPath();g.moveTo(-56,-88);g.quadraticCurveTo(-70,-154,-9,-157);g.quadraticCurveTo(55,-164,60,-93);g.quadraticCurveTo(30,-119,5,-121);g.quadraticCurveTo(-25,-104,-49,-72);g.closePath();g.fillStyle='#171e2a';g.fill();
+ oval(-21,-87,4,3,'#392d2b');oval(21,-87,4,3,'#392d2b');line({x:-30,y:-105},{x:-12,y:-107},4,'#392d2b');line({x:12,y:-107},{x:30,y:-105},4,'#392d2b');g.restore();
+}
+function renderAt(t){t=clamp(t,0,12);let scene=t<4?0:t<8?1:2,local=t-scene*4;backdrop(scene,t);
+ const fade=ease(Math.min(local/.45,(4-local)/.45));g.save();let zoom=scene===0?1.04+ease(local/4)*.04:scene===1?1.08-ease(local/4)*.05:1.03+ease(local/4)*.04;g.translate(960,540);g.scale(zoom,zoom);g.translate(-960+ (scene===0?-local*12:scene===2?local*10:0),-540);
+ if(scene===0){phone(1180,817);let walkPhase=local*.62;character(520+local*75,910,t,'walk',walkPhase,false)}
+ if(scene===1){let reach=ease((local-.55)/1.55);character(950,910,t,reach<.98?'reach':'settle',reach,reach>.99)}
+ if(scene===2){character(850+local*22,910,t,'walk',local*.55,false)}
+ g.restore();g.fillStyle='#dbe8e9';g.font='800 18px system-ui';g.letterSpacing='5px';g.fillText('WISE-LAB  /  CHARACTER MOTION STUDY',112,104);
+ const captions=['A small distraction changes your direction.','Your body commits before your attention catches up.','You can choose where the next step goes.'];g.font='700 42px system-ui';g.letterSpacing='0';g.shadowColor='#07101c';g.shadowBlur=18;g.fillStyle='#fff';g.fillText(captions[scene],112,970);g.shadowBlur=0;
+ let vignette=g.createRadialGradient(960,520,300,960,520,1120);vignette.addColorStop(0,'#0000');vignette.addColorStop(1,'#050a14aa');g.fillStyle=vignette;g.fillRect(0,0,W,H);
+ if(fade<1){g.fillStyle='rgba(5,10,20,'+(1-fade)+')';g.fillRect(0,0,W,H)}
+}window.renderAt=renderAt;renderAt(0);
+</script></body></html>

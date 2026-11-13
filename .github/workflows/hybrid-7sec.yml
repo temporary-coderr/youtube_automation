@@ -1,0 +1,92 @@
+name: WISE-LAB Hybrid 10-Second Three-Quarter Character Test
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/cinematic-engine]
+    paths:
+      - 'prototype/hybrid_character_pass.py'
+      - 'prototype/validate_preview.py'
+      - '.github/workflows/hybrid-7sec.yml'
+permissions:
+  contents: read
+concurrency:
+  group: wise-hybrid-10sec-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender ffmpeg python3-pil python3-cairosvg libegl1 libgl1 libx11-6 libxi6 libxrender1 libxfixes3 libxkbcommon0
+      - name: Create illustrated bedroom background and props
+        run: |
+          mkdir -p renders/background renders/character renders/final
+          cat > renders/background/bedroom.svg <<'SVG'
+          <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+          <defs>
+            <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#27364a"/><stop offset="1" stop-color="#172333"/></linearGradient>
+            <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#594438"/><stop offset="1" stop-color="#211e25"/></linearGradient>
+            <linearGradient id="window" x2="0" y2="1"><stop stop-color="#182b4a"/><stop offset="1" stop-color="#617d91"/></linearGradient>
+            <radialGradient id="glow"><stop stop-color="#ffc77b" stop-opacity=".55"/><stop offset="1" stop-color="#ffc77b" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="1280" height="535" fill="url(#wall)"/><rect y="535" width="1280" height="185" fill="url(#floor)"/>
+          <rect x="110" y="95" width="360" height="310" rx="8" fill="#111c2a" stroke="#916d50" stroke-width="18"/><rect x="130" y="115" width="320" height="270" fill="url(#window)"/>
+          <path d="M130 260H450M290 115V385" stroke="#b18a65" stroke-width="12"/>
+          <circle cx="205" cy="170" r="34" fill="#e8d6a8" opacity=".8"/><path d="M130 330 Q220 260 300 335 T450 320V385H130Z" fill="#23364b" opacity=".8"/>
+          <rect x="0" y="490" width="1280" height="45" fill="#151e2a" opacity=".65"/>
+          <rect x="720" y="390" width="475" height="28" rx="8" fill="#80543a"/><rect x="755" y="418" width="20" height="205" fill="#513827"/><rect x="1135" y="418" width="20" height="205" fill="#513827"/>
+          <rect x="575" y="445" width="185" height="18" rx="8" fill="#77523c"/><rect x="590" y="463" width="16" height="140" fill="#503b31"/><rect x="730" y="463" width="16" height="140" fill="#503b31"/>
+          <rect x="590" y="355" width="160" height="100" rx="12" fill="#35465a"/><rect x="600" y="330" width="140" height="90" rx="16" fill="#41566c"/>
+          <ellipse cx="1090" cy="365" rx="190" ry="210" fill="url(#glow)"/>
+          <path d="M1090 260V340" stroke="#d8b17c" stroke-width="12"/><path d="M1040 270L1140 270L1118 225H1062Z" fill="#e4b36f"/><circle cx="1090" cy="275" r="110" fill="url(#glow)"/>
+          <rect x="80" y="570" width="270" height="95" rx="8" fill="#263343" opacity=".7"/><text x="110" y="625" fill="#d6dce4" font-family="Arial" font-size="23" letter-spacing="4">WISE LAB • NIGHT STUDY</text>
+          </svg>
+          SVG
+          python3 - <<'PY'
+          import cairosvg
+          cairosvg.svg2png(url='renders/background/bedroom.svg',write_to='renders/background/bedroom.png')
+          PY
+      - name: Render animated Blender character on transparent frames
+        run: |
+          set -euo pipefail
+          blender -b -t 4 --python prototype/hybrid_character_pass.py
+          count=$(find renders/character -maxdepth 1 -name 'frame_*.png' | wc -l)
+          test "$count" -eq 240 || { echo "Expected 240 character frames, got $count"; exit 1; }
+      - name: Composite illustrated background and Blender character
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from PIL import Image
+          import glob
+          bg=Image.open('renders/background/bedroom.png').convert('RGBA')
+          files=sorted(glob.glob('renders/character/frame_*.png'))
+          assert len(files)==240, f'Expected 240 character frames, got {len(files)}'
+          for i,p in enumerate(files):
+              fg=Image.open(p).convert('RGBA').resize((1280,720),Image.Resampling.LANCZOS)
+              Image.alpha_composite(bg,fg).convert('RGB').save(f'renders/final/frame_{i+1:04d}.jpg',quality=92)
+          print('COMPOSITED_FRAMES',len(files))
+          PY
+          ffmpeg -hide_banner -loglevel error -y -framerate 24 -i renders/final/frame_%04d.jpg -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p renders/wise-lab-hybrid-10sec.mp4
+          ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-hybrid-10sec.mp4 -vf "fps=1,scale=480:-1,tile=4x2" -frames:v 1 renders/wise-lab-hybrid-contact.jpg
+          ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate -of json renders/wise-lab-hybrid-10sec.mp4 > renders/wise-lab-hybrid-report.json
+      - name: Validate rendered MP4 quality
+        run: python3 prototype/validate_preview.py renders/wise-lab-hybrid-10sec.mp4 --report renders/wise-lab-quality-report.json
+      - name: Upload preview and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-hybrid-10sec-${{ github.run_number }}
+          path: |
+            renders/wise-lab-hybrid-10sec.mp4
+            renders/wise-lab-hybrid-contact.jpg
+            renders/wise-lab-hybrid-report.json
+            renders/wise-lab-quality-report.json
+            renders/background/**
+            renders/character/**
+            renders/hybrid-character.blend
+          if-no-files-found: warn
+          retention-days: 7
