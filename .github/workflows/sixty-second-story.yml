@@ -1,0 +1,111 @@
+name: WISE-LAB 60-Second New Character Story Pilot
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/cinematic-engine]
+    paths:
+      - 'prototype/sixty_second_story.py'
+      - '.github/workflows/sixty-second-story.yml'
+permissions:
+  contents: read
+concurrency:
+  group: wise-lab-60sec-story-pilot
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender, FFmpeg and fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender ffmpeg fonts-dejavu-core libegl1 libgl1 libx11-6 libxi6 libxrender1 libxfixes3 libxkbcommon0
+          python3 -m pip install --user --break-system-packages edge-tts
+      - name: Write original 60-second narration and captions
+        run: |
+          mkdir -p renders/audio renders/pilot_frames
+          cat > renders/audio/narration.txt <<'TXT'
+          You answer one message. Then another. A quick reply becomes a conversation, and suddenly your evening belongs to everyone except you. Being available feels helpful, even responsible. But every notification pulls your attention away from the person, task, or moment right in front of you. At work, constant checking leaves your mind switching instead of thinking deeply. Outside, the phone follows you into every quiet moment. Here is the hidden cost: you never fully arrive anywhere. Try one small boundary. Choose a time to silence nonessential alerts. Put your phone out of reach while you eat, work, or rest. People who care about you can wait a little. Your attention is not an unlimited public resource. Being reachable is useful. Being permanently available is exhausting. Give your mind permission to come back to you.
+          TXT
+          cat > renders/audio/captions.srt <<'SRT'
+          1
+          00:00:00,000 --> 00:00:07,000
+          You answer one message. Then another.
+          A quick reply becomes a conversation.
+
+          2
+          00:00:07,000 --> 00:00:16,000
+          Suddenly your evening belongs to everyone
+          except you. Being available feels helpful.
+
+          3
+          00:00:16,000 --> 00:00:26,000
+          But every notification pulls your attention
+          away from the moment right in front of you.
+
+          4
+          00:00:26,000 --> 00:00:36,000
+          At work, constant checking leaves your mind
+          switching instead of thinking deeply.
+
+          5
+          00:00:36,000 --> 00:00:46,000
+          You never fully arrive anywhere.
+          Try one small boundary.
+
+          6
+          00:00:46,000 --> 00:00:54,000
+          Silence nonessential alerts. Put your phone
+          out of reach while you eat, work, or rest.
+
+          7
+          00:00:54,000 --> 00:01:00,000
+          Being reachable is useful.
+          Being permanently available is exhausting.
+          TXT
+          edge-tts --voice en-US-AriaNeural --rate=+2% --file renders/audio/narration.txt --write-media renders/audio/narration.mp3
+      - name: Render new character and six environments in Blender
+        run: |
+          set -euo pipefail
+          blender -b -t 4 --python prototype/sixty_second_story.py
+          count=$(find renders/pilot_frames -maxdepth 1 -name 'frame_*.png' | wc -l)
+          test "$count" -eq 1440 || { echo "Expected 1440 frames, got $count"; exit 1; }
+      - name: Assemble 60-second MP4 with narration, captions and sound design
+        run: |
+          set -euo pipefail
+          ffmpeg -hide_banner -loglevel error -y -framerate 24 -i renders/pilot_frames/frame_%04d.png -c:v libx264 -preset veryfast -crf 21 -pix_fmt yuv420p renders/pilot-picture.mp4
+          # A subtle original notification ping, mixed under the narration.
+          ffmpeg -hide_banner -loglevel error -y -f lavfi -i "sine=frequency=880:duration=0.22:sample_rate=48000" -af "afade=t=in:st=0:d=0.01,afade=t=out:st=0.12:d=0.10,volume=0.16" renders/audio/notification.wav
+          ffmpeg -hide_banner -loglevel error -y -i renders/audio/narration.mp3 -i renders/audio/notification.wav -filter_complex "[1:a]adelay=4800|4800[ping];[0:a]volume=1.0[voice];[voice][ping]amix=inputs=2:duration=first:dropout_transition=0, loudnorm=I=-16:TP=-1.5:LRA=11[a]" -map "[a]" -t 60 renders/audio/final-mix.m4a
+          ffmpeg -hide_banner -loglevel error -y -i renders/pilot-picture.mp4 -i renders/audio/final-mix.m4a -vf "subtitles=renders/audio/captions.srt:force_style='FontName=DejaVu Sans,FontSize=24,PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,BorderStyle=1,Outline=2,Shadow=1,Alignment=2,MarginV=38'" -map 0:v:0 -map 1:a:0 -t 60 -c:v libx264 -preset veryfast -crf 21 -pix_fmt yuv420p -c:a aac -b:a 160k -movflags +faststart renders/wise-lab-60sec-new-character-pilot.mp4
+          ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-60sec-new-character-pilot.mp4 -vf "fps=1,scale=480:-1,tile=3x2" -frames:v 1 renders/wise-lab-60sec-contact.jpg
+          ffprobe -v error -show_entries format=duration:stream=width,height,codec_type -of json renders/wise-lab-60sec-new-character-pilot.mp4 > renders/wise-lab-60sec-report.json
+      - name: Validate complete pilot
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, os
+          p='renders/wise-lab-60sec-new-character-pilot.mp4'
+          assert os.path.exists(p) and os.path.getsize(p)>500000, 'MP4 missing or too small'
+          m=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration:stream=width,height,codec_type','-of','json',p]))
+          v=next(x for x in m['streams'] if x['codec_type']=='video')
+          a=next(x for x in m['streams'] if x['codec_type']=='audio')
+          d=float(m['format']['duration'])
+          assert (v['width'],v['height'])==(1280,720), v
+          assert 59.5<=d<=60.5, d
+          assert a['codec_type']=='audio'
+          print(json.dumps({'status':'passed','duration_seconds':d,'resolution':'1280x720','audio':'present','size_bytes':os.path.getsize(p)},indent=2))
+          PY
+      - name: Upload finished pilot and source diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-60sec-new-character-pilot-${{ github.run_number }}
+          path: |
+            renders/wise-lab-60sec-new-character-pilot.mp4
+            renders/wise-lab-60sec-contact.jpg
+            renders/wise-lab-60sec-report.json
+            renders/wise-lab-60sec-pilot.blend
+            renders/audio/**
+          if-no-files-found: warn
+          retention-days: 7
