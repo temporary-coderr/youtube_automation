@@ -86,8 +86,8 @@ async def main() -> int:
     args = parser.parse_args()
     if not args.html.is_file():
         raise FileNotFoundError(f"Scene HTML not found: {args.html}")
-    if args.width < 320 or args.height < 180 or args.fps < 1 or args.duration <= 0 or args.duration > 12:
-        raise ValueError("Invalid dimensions or frame rate; this authored prototype supports 0 < duration <= 12 seconds")
+    if args.width < 320 or args.height < 180 or args.fps < 1 or args.duration <= 0 or args.duration > 180:
+        raise ValueError("Invalid dimensions or frame rate; this authored prototype supports 0 < duration <= 180 seconds")
     if args.audio and not args.audio.is_file():
         raise FileNotFoundError(f"Audio not found: {args.audio}")
     if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
