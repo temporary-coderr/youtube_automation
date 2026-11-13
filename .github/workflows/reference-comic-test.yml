@@ -35,3 +35,5 @@ jobs:
             renders/reference-comic-report.json
           if-no-files-found: error
           retention-days: 7
+
+# rerun after FFmpeg diagnostics fix
