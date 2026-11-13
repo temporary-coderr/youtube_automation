@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       duration:
-        description: "Preview duration in seconds (prototype is 12 seconds)"
+        description: "Preview duration in seconds"
         required: true
-        default: "12"
+        default: "120"
       format:
         description: "Output format"
         required: true
@@ -45,7 +45,7 @@ jobs:
       - name: Install FFmpeg
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg espeak-ng
           ffmpeg -version | head -n 2
       - name: Install browser renderer
         run: |
@@ -63,7 +63,7 @@ jobs:
             echo "width=1280" >> "$GITHUB_OUTPUT"
             echo "height=720" >> "$GITHUB_OUTPUT"
           fi
-          echo "duration=${{ inputs.duration || '12' }}" >> "$GITHUB_OUTPUT"
+          echo "duration=${{ inputs.duration || '120' }}" >> "$GITHUB_OUTPUT"
       - name: Render and validate MP4
         run: |
           python engine/render_prototype.py \
@@ -74,7 +74,7 @@ jobs:
             --fps 24 --output renders/cinematic-preview.mp4
       - name: Build visual contact sheet
         run: |
-          ffmpeg -hide_banner -loglevel error -y -i renders/cinematic-preview.mp4 -vf "fps=1/2,scale=640:-1,tile=3x2" -frames:v 1 renders/cinematic-contact-sheet.jpg
+          ffmpeg -hide_banner -loglevel error -y -i renders/cinematic-preview.mp4 -vf "fps=1/20,scale=640:-1,tile=3x2" -frames:v 1 renders/cinematic-contact-sheet.jpg
       - name: Upload preview and QA report
         uses: actions/upload-artifact@v4
         with:
