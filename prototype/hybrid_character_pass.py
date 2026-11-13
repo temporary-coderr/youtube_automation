@@ -35,6 +35,47 @@ def place_segment(o,a,b):
  a=Vector(a); b=Vector(b); d=b-a
  o.location=(a+b)*.5; o.rotation_mode="QUATERNION"; o.rotation_quaternion=d.to_track_quat("Z","Y"); o.dimensions=(o.dimensions.x,o.dimensions.y,d.length)
 
+
+# 3D desk props rendered in the same pass as the character so hands and objects share depth.
+def cube(name, location, dimensions, material, bevel=0.025):
+    bpy.ops.mesh.primitive_cube_add(size=1, location=location)
+    o=bpy.context.object; o.name=name; o.dimensions=dimensions
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    o.data.materials.append(material)
+    if bevel:
+        mod=o.modifiers.new("soft manufactured edges","BEVEL"); mod.width=bevel; mod.segments=3
+        o.modifiers.new("weighted normals","WEIGHTED_NORMAL")
+    return o
+
+laptopBody=mat("laptop graphite",(.075,.095,.12))
+laptopKeys=mat("keyboard keys",(.20,.23,.27))
+screenMat=mat("screen deep blue",(.018,.045,.075))
+screenGlow=mat("screen content glow",(.10,.32,.43))
+ceramic=mat("warm ceramic",(.72,.68,.59))
+coffee=mat("coffee",(.12,.055,.028))
+paper=mat("notebook ivory",(.82,.77,.65))
+penMat=mat("pen dark teal",(.035,.18,.20))
+# Desk surface in the illustrated plate maps to z ~= 2.15 in this camera.
+laptopBase=cube("3D laptop base",(1.02,-.40,2.18),(.92,.58,.055),laptopBody,.035)
+laptopScreen=cube("3D laptop screen",(1.02,-.14,2.43),(.92,.055,.48),laptopBody,.035)
+laptopDisplay=cube("laptop illuminated display",(1.02,-.172,2.43),(.82,.012,.38),screenMat,.012)
+# A restrained interface glow makes the screen readable without text clutter.
+screenBar=cube("screen interface accent",(1.02,-.181,2.55),(.48,.006,.018),screenGlow,.004)
+for row in range(3):
+    for col in range(11):
+        cube("individual keyboard key",(0.66+col*.071,-.47-row*.105,2.213),(.047,.055,.009),laptopKeys,.006)
+# Notebook, pen and coffee mug make the desk feel occupied and give later scenes usable props.
+notebook=cube("closed notebook",(2.10,-.34,2.185),(.46,.34,.045),paper,.018)
+notebookCover=cube("notebook cover",(2.10,-.34,2.209),(.47,.35,.018),laptopBody,.012)
+pen=cube("pen on notebook",(2.12,-.37,2.229),(.36,.018,.012),penMat,.006)
+bpy.ops.mesh.primitive_cylinder_add(vertices=32,radius=.105,depth=.22,location=(2.72,-.35,2.30))
+mug=bpy.context.object; mug.name="ceramic coffee mug"; mug.data.materials.append(ceramic)
+bev=mug.modifiers.new("mug softened rim","BEVEL"); bev.width=.012; bev.segments=3
+bpy.ops.mesh.primitive_torus_add(major_radius=.075,minor_radius=.018,major_segments=24,minor_segments=10,location=(2.84,-.35,2.31))
+handle=bpy.context.object; handle.name="coffee mug handle"; handle.data.materials.append(ceramic)
+bpy.ops.mesh.primitive_cylinder_add(vertices=32,radius=.083,depth=.008,location=(2.72,-.35,2.414))
+coffeeTop=bpy.context.object; coffeeTop.name="coffee surface"; coffeeTop.data.materials.append(coffee)
+
 # Camera frames a large, readable character while preserving the desk in the right side of the room.
 bpy.ops.object.camera_add(location=(0,-12,2.45))
 cam=bpy.context.object; cam.data.type="ORTHO"; cam.data.ortho_scale=7.2
@@ -122,8 +163,8 @@ def pose(frame):
  walkSwing=math.sin(frame*.36)*.18*(1-sit)
  elbowL=mix((rootx-.56,0,shoulderz-.34),(rootx-.42,0,shoulderz-.30),sit)
  wristL=mix((rootx-.50,-.02,shoulderz-.70),(rootx-.18,-.10,1.10),sit)
- elbowR=mix((rootx+.56,0,shoulderz-.34),(rootx+.53,-.02,shoulderz-.25),sit)
- wristR=mix((rootx+.50,-.02,shoulderz-.70),(rootx+.88,-.18,1.16),sit)
+ elbowR=mix((rootx+.56,0,shoulderz-.34),(rootx+.42,-.22,1.78),sit)
+ wristR=mix((rootx+.50,-.02,shoulderz-.70),(rootx+.98,-.48,2.225),sit)
  if frame<65:
   elbowL=(rootx-.56,0,shoulderz-.34+walkSwing); wristL=(rootx-.50,-.02,shoulderz-.70+walkSwing)
   elbowR=(rootx+.56,0,shoulderz-.34-walkSwing); wristR=(rootx+.50,-.02,shoulderz-.70-walkSwing)
