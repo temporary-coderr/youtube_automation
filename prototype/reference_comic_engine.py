@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import math, os, subprocess
 
 W,H,FPS=1280,720,24
@@ -23,13 +23,17 @@ def poly(d,p,c,o=INK,w=4):
  if o: d.line(p+[p[0]],fill=o,width=w,joint="curve")
 def center(d,x,y,s,font=FM,c=INK):
  b=d.textbbox((0,0),s,font=font); d.text((x-(b[2]-b[0])/2,y),s,font=font,fill=c)
+def make_gradient(top,bottom):
+ mask=Image.linear_gradient("L").resize((W,H))
+ return ImageOps.colorize(mask,top,bottom)
+GRADIENTS={
+ "bedroom":make_gradient("#192a3d","#4b585b"),
+ "street":make_gradient("#e1a678","#414c58"),
+ "bus":make_gradient("#344c5b","#414c58"),
+ "park":make_gradient("#9dc2be","#6c845f")
+}
 def bg(kind,t):
- im=Image.new("RGB",(W,H)); p=im.load()
- a=(25,42,61) if kind=="bedroom" else ((225,166,120) if kind=="street" else ((52,76,91) if kind=="bus" else (157,194,190)))
- b=(75,88,91) if kind=="bedroom" else ((65,76,88) if kind in ("street","bus") else (108,132,95))
- for y in range(H):
-  q=y/(H-1); c=tuple(int(a[k]*(1-q)+b[k]*q) for k in range(3))
-  for x in range(W): p[x,y]=c
+ im=GRADIENTS[kind].copy()
  d=ImageDraw.Draw(im)
  if kind=="bedroom":
   rr(d,(55,65,440,350),"#263f55","#d8c7a6",8)
