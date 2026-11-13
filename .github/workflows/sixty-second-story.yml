@@ -77,9 +77,9 @@ jobs:
           ffmpeg -hide_banner -loglevel error -y -framerate 24 -i renders/pilot_frames/frame_%04d.png -c:v libx264 -preset veryfast -crf 21 -pix_fmt yuv420p renders/pilot-picture.mp4
           # A subtle original notification ping, mixed under the narration.
           ffmpeg -hide_banner -loglevel error -y -f lavfi -i "sine=frequency=880:duration=0.22:sample_rate=48000" -af "afade=t=in:st=0:d=0.01,afade=t=out:st=0.12:d=0.10,volume=0.16" renders/audio/notification.wav
-          ffmpeg -hide_banner -loglevel error -y -i renders/audio/narration.mp3 -i renders/audio/notification.wav -filter_complex "[1:a]adelay=4800|4800[ping];[0:a]volume=1.0[voice];[voice][ping]amix=inputs=2:duration=first:dropout_transition=0, loudnorm=I=-16:TP=-1.5:LRA=11[a]" -map "[a]" -t 60 renders/audio/final-mix.m4a
+          ffmpeg -hide_banner -loglevel error -y -i renders/audio/narration.mp3 -i renders/audio/notification.wav -filter_complex "[1:a]adelay=4800|4800[ping];[0:a]volume=1.0[voice];[voice][ping]amix=inputs=2:duration=first:dropout_transition=0,apad=pad_dur=60,loudnorm=I=-16:TP=-1.5:LRA=11[a]" -map "[a]" -t 60 renders/audio/final-mix.m4a
           ffmpeg -hide_banner -loglevel error -y -i renders/pilot-picture.mp4 -i renders/audio/final-mix.m4a -vf "subtitles=renders/audio/captions.srt:force_style='FontName=DejaVu Sans,FontSize=24,PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,BorderStyle=1,Outline=2,Shadow=1,Alignment=2,MarginV=38'" -map 0:v:0 -map 1:a:0 -t 60 -c:v libx264 -preset veryfast -crf 21 -pix_fmt yuv420p -c:a aac -b:a 160k -movflags +faststart renders/wise-lab-60sec-new-character-pilot.mp4
-          ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-60sec-new-character-pilot.mp4 -vf "fps=1,scale=480:-1,tile=3x2" -frames:v 1 renders/wise-lab-60sec-contact.jpg
+          ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-60sec-new-character-pilot.mp4 -vf "fps=0.1,scale=480:-1,tile=3x2" -frames:v 1 renders/wise-lab-60sec-contact.jpg
           ffprobe -v error -show_entries format=duration:stream=width,height,codec_type -of json renders/wise-lab-60sec-new-character-pilot.mp4 > renders/wise-lab-60sec-report.json
       - name: Validate complete pilot
         run: |
