@@ -1,0 +1,57 @@
+name: Blender Animation Benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/cinematic-engine
+    paths:
+      - "prototype/blender_benchmark.py"
+      - ".github/workflows/blender-benchmark.yml"
+
+permissions:
+  contents: read
+concurrency:
+  group: blender-benchmark-\${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender ffmpeg espeak-ng
+          blender --version | head -n 2
+          ffmpeg -version | head -n 2
+      - name: Render 15-second Blender scene
+        env:
+          WISE_OUTPUT: renders/blender-benchmark.mp4
+        run: |
+          mkdir -p renders
+          blender -b -t 4 --python prototype/blender_benchmark.py
+          test -s renders/blender-benchmark.mp4
+      - name: Add short narration track
+        run: |
+          printf '%s\n' "You walk into the room with a plan. Then your phone lights up. Your hand moves before you decide. Pause. Notice the reach. Take control of the next action." > renders/narration.txt
+          espeak-ng -v en-us -s 138 -p 42 -a 160 -f renders/narration.txt -w renders/narration.wav
+          ffmpeg -hide_banner -loglevel error -y -i renders/blender-benchmark.mp4 -i renders/narration.wav -filter_complex "[1:a]apad,atrim=0:15,volume=0.9[a]" -map 0:v:0 -map "[a]" -t 15 -c:v copy -c:a aac -b:a 160k renders/blender-benchmark-narrated.mp4
+      - name: Create contact sheet and report
+        run: |
+          ffmpeg -hide_banner -loglevel error -y -i renders/blender-benchmark-narrated.mp4 -vf "fps=1,scale=480:-1,tile=5x3" -frames:v 1 renders/blender-contact-sheet.jpg
+          ffprobe -v error -show_entries format=duration:stream=codec_name,width,height,r_frame_rate -of json renders/blender-benchmark-narrated.mp4 > renders/blender-benchmark-report.json
+          cat renders/blender-benchmark-report.json
+      - name: Upload Blender benchmark
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-blender-benchmark-\${{ github.run_number }}
+          path: |
+            renders/blender-benchmark-narrated.mp4
+            renders/blender-benchmark.mp4
+            renders/blender-benchmark.blend
+            renders/blender-contact-sheet.jpg
+            renders/blender-benchmark-report.json
+          if-no-files-found: error
+          retention-days: 14
