@@ -9,7 +9,7 @@ bpy.ops.object.select_all(action="SELECT"); bpy.ops.object.delete(use_global=Fal
 s=bpy.context.scene
 s.render.engine="BLENDER_EEVEE"
 s.render.resolution_x=1280; s.render.resolution_y=720; s.render.resolution_percentage=100
-s.render.fps=24; s.frame_start=1; s.frame_end=168; s.eevee.taa_render_samples=8
+s.render.fps=24; s.frame_start=1; s.frame_end=240; s.eevee.taa_render_samples=8
 s.render.image_settings.file_format="PNG"; s.render.image_settings.color_mode="RGBA"; s.render.film_transparent=True
 s.view_settings.view_transform="Standard"; s.view_settings.look="Medium High Contrast"
 
@@ -95,10 +95,12 @@ phoneLight=bpy.context.object; phoneLight.name="phone notification light"; phone
 phoneLight.data.color=(.22,.58,.82); phoneLight.data.shape="DISK"; phoneLight.data.size=.45
 phoneLight.rotation_euler=(radians(18),0,0)
 
-# Camera frames a large, readable character while preserving the desk in the right side of the room.
-bpy.ops.object.camera_add(location=(0,-12,2.45))
-cam=bpy.context.object; cam.data.type="ORTHO"; cam.data.ortho_scale=7.2
-cam.rotation_euler=(radians(90),0,0); s.camera=cam
+# Three-quarter camera: retain the face while revealing the head, torso and arm depth.
+# A mild left-front angle avoids the flat, passport-photo look of the previous test.
+bpy.ops.object.camera_add(location=(-4.2,-12,2.75))
+cam=bpy.context.object; cam.data.type="ORTHO"; cam.data.ortho_scale=8.2
+look_at=Vector((.35,0,1.62))
+cam.rotation_euler=(look_at-Vector(cam.location)).to_track_quat("-Z","Y").to_euler(); s.camera=cam
 
 # Main silhouette: overlapping torso/neck/head and rounded shoulder/hip joints.
 torso=ball("continuous hoodie torso",(.43,.27,.62),hoodie)
@@ -139,12 +141,14 @@ def smooth(a,b,t):
  t=max(0,min(1,t)); return a+(b-a)*(t*t*(3-2*t))
 def mix(a,b,t): return tuple(smooth(x,y,t) for x,y in zip(a,b))
 def pose(frame):
- # Walk in toward the chair, brake, lower into a seated pose, then reach to the laptop.
+ # Walk in, sit down, type briefly, then reach from the keyboard toward the phone.
  walk=smooth(0,1,(frame-1)/48)
  sit=smooth(0,1,(frame-68)/35)
+ phoneReach=smooth(0,1,(frame-176)/30)
+ typePhase=smooth(0,1,(frame-108)/12)*(1-smooth(0,1,(frame-170)/12))
  rootx=-1.75+1.25*walk
  basez=smooth(0,1,(frame-68)/35)
- bob=(math.sin(frame*.42)*.045)*(1-sit) if frame<70 else 0
+ bob=(math.sin(frame*.42)*.045)*(1-sit) if frame<70 else math.sin(frame*.16)*.012*sit
  hipz=smooth(1.02,.88,basez)+bob
  shoulderz=smooth(1.92,1.48,basez)+bob
  headz=smooth(2.43,2.02,basez)+bob
@@ -183,7 +187,10 @@ def pose(frame):
  elbowL=mix((rootx-.56,0,shoulderz-.34),(rootx-.42,0,shoulderz-.30),sit)
  wristL=mix((rootx-.50,-.02,shoulderz-.70),(rootx-.18,-.10,1.10),sit)
  elbowR=mix((rootx+.56,0,shoulderz-.34),(rootx+.42,-.22,1.78),sit)
- wristR=mix((rootx+.50,-.02,shoulderz-.70),(rootx+.98,-.48,2.225),sit)
+ wristR=mix((rootx+.50,-.02,shoulderz-.70),(rootx+.98+math.sin(frame*.75)*.035*typePhase,-.48,2.225+math.sin(frame*1.4)*.018*typePhase),sit)
+ # After the typing beat, reach across the desk and make contact with the phone.
+ wristR=mix(wristR,(.30,-.565,2.405),phoneReach)
+ elbowR=mix(elbowR,(.48,-.28,1.88),phoneReach)
  if frame<65:
   elbowL=(rootx-.56,0,shoulderz-.34+walkSwing); wristL=(rootx-.50,-.02,shoulderz-.70+walkSwing)
   elbowR=(rootx+.56,0,shoulderz-.34-walkSwing); wristR=(rootx+.50,-.02,shoulderz-.70-walkSwing)
@@ -198,7 +205,7 @@ def pose(frame):
  feet[0].rotation_euler[1]=-.08; feet[1].rotation_euler[1]=-.08
 
  # Brief notification pulse and restrained vibration; the phone remains planted on the desk.
- alert=smooth(0,1,(frame-112)/7)*(1-smooth(0,1,(frame-139)/8))
+ alert=smooth(0,1,(frame-205)/7)*(1-smooth(0,1,(frame-232)/8))
  pulse=.72+.28*(.5+.5*math.sin(frame*.48))
  def set_emission(material, color, strength):
   bs=material.node_tree.nodes.get("Principled BSDF")
