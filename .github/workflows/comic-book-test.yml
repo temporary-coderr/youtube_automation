@@ -24,7 +24,7 @@ jobs:
       - name: Generate narration
         run: |
           mkdir -p renders/comic
-          espeak-ng -v en-us -s 145 -w renders/comic/narration.wav "Your attention feels like it is under your control. Then one small notification breaks your focus. And suddenly, your mind is somewhere else."
+          espeak-ng -v en-us -s 138 -w renders/comic/narration.wav "You sit down to focus and finally find your rhythm. Then your phone lights up with one tiny notification. Your hand reaches for it before you even decide. A moment later your attention has drifted away."
       - name: Render illustrated comic frames and compose narration
         run: |
           python3 prototype/comic_book_benchmark.py
