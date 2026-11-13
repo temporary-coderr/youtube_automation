@@ -21,11 +21,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pil ffmpeg espeak-ng
-      - name: Generate six-scene narration
-        run: |
-          mkdir -p renders/comic
-          espeak-ng -v en-us -s 132 -w renders/comic/narration.wav "You promise yourself just ten minutes of focused work. A notification flashes while the room stays quiet. Outside, every screen competes for your attention. You return to work, but your mind keeps checking. One glance becomes a chain of tiny distractions. You put the phone away and choose what matters."
-      - name: Render illustrated comic pages and compose narration
+      - name: Generate narration from scene JSON
+        run: python3 prototype/generate_scene_audio.py
+      - name: Validate scene JSON and render comic MP4
         run: |
           python3 prototype/comic_page_engine.py
           ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate -of json renders/wise-lab-comic-20sec.mp4 > renders/wise-lab-comic-report.json
