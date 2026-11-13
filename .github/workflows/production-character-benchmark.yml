@@ -26,6 +26,7 @@ jobs:
           mkdir -p renders
           python3 prototype/production_character_benchmark.py
           ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate,codec_name -of json renders/wise-lab-production-character-20sec.mp4 | tee renders/production-character-report.json
+          ffmpeg -hide_banner -loglevel error -i renders/wise-lab-production-character-20sec.mp4 -vf 'fps=1/2.5,scale=640:-1,tile=2x4' -frames:v 1 renders/production-character-contact-sheet.jpg
       - name: Upload benchmark MP4 and report
         uses: actions/upload-artifact@v4
         with:
@@ -33,5 +34,6 @@ jobs:
           path: |
             renders/wise-lab-production-character-20sec.mp4
             renders/production-character-report.json
+            renders/production-character-contact-sheet.jpg
           if-no-files-found: error
           retention-days: 7
