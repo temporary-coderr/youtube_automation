@@ -48,7 +48,18 @@ head=ball("head",(.30,.27,.36),skin)
 haircap=ball("messy hair",(.32,.29,.20),hair)
 fringe=ball("front hair",(.23,.10,.12),hair)
 # Face detail facing camera (-Y).
-eye1=ball("left eye",(.026,.018,.032),skin); eye2=ball("right eye",(.026,.018,.032),skin)
+# Readable front-facing face: layered whites, irises, pupils, brows, nose, mouth and ears.
+eyeWhite=mat("warm eye whites",(.92,.86,.75)); irisMat=mat("deep brown irises",(.12,.055,.028))
+pupilMat=mat("dark pupils",(.012,.009,.008)); browMat=hair; mouthMat=mat("mouth",(.20,.065,.055))
+ears=[ball("left ear",(.065,.055,.09),skin),ball("right ear",(.065,.055,.09),skin)]
+eyes=[ball("left eye white",(.064,.025,.047),eyeWhite),ball("right eye white",(.064,.025,.047),eyeWhite)]
+irises=[ball("left iris",(.027,.014,.030),irisMat),ball("right iris",(.027,.014,.030),irisMat)]
+pupils=[ball("left pupil",(.014,.009,.020),pupilMat),ball("right pupil",(.014,.009,.020),pupilMat)]
+brows=[ball("left eyebrow",(.072,.022,.018),browMat),ball("right eyebrow",(.072,.022,.018),browMat)]
+nose=ball("nose",(.038,.040,.060),skin)
+mouth=ball("mouth",(.060,.016,.014),mouthMat)
+# Tiny cheek forms help the face read in profile and under soft lighting.
+cheeks=[ball("left cheek",(.055,.018,.035),skin),ball("right cheek",(.055,.018,.035),skin)]
 # Rounded limbs built from overlapping upper/lower sections; endpoints are updated as a single kinematic pose.
 limbs={}
 for name,r,m in [
@@ -89,7 +100,23 @@ def pose(frame):
  torso.location=(rootx,0,shoulderz-.36); pelvis.location=(rootx,0,hipz)
  neck.location=(rootx,0,headz-.39); head.location=(rootx,-.015,headz)
  haircap.location=(rootx,.005,headz+.22); fringe.location=(rootx,-.23,headz+.14)
- eye1.location=(rootx-.105,-.278,headz+.015); eye2.location=(rootx+.105,-.278,headz+.015)
+ # Face points toward camera (-Y); all features are re-positioned from the animated head anchor.
+ for i,side in enumerate((-1,1)):
+  x=rootx+side*.105
+  eyes[i].location=(x,-.274,headz+.025)
+  irises[i].location=(x+.008,-.300,headz+.020)
+  pupils[i].location=(x+.010,-.313,headz+.020)
+  brows[i].location=(rootx+side*.108,-.285,headz+.115)
+  ears[i].location=(rootx+side*.292,-.005,headz-.015)
+  cheeks[i].location=(rootx+side*.155,-.263,headz-.095)
+ nose.location=(rootx,-.302,headz-.055)
+ mouth.location=(rootx,-.292,headz-.158)
+ # Natural periodic blink; keep the iris/pupil compressed with the eyelid.
+ blinkPhase=frame%96
+ blink=0.12 if blinkPhase in (0,1,2) else (0.45 if blinkPhase in (95,3) else 1.0)
+ for eye in eyes: eye.scale.z=.047*blink
+ for iris in irises: iris.scale.z=.030*blink
+ for pupil in pupils: pupil.scale.z=.020*blink
  # Arm movement: natural swing while walking; right hand reaches the desktop in the final beat.
  shoulderL=(rootx-.36,0,shoulderz+.02); shoulderR=(rootx+.36,0,shoulderz+.02)
  walkSwing=math.sin(frame*.36)*.18*(1-sit)
