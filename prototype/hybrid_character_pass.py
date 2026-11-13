@@ -76,6 +76,25 @@ handle=bpy.context.object; handle.name="coffee mug handle"; handle.data.material
 bpy.ops.mesh.primitive_cylinder_add(vertices=32,radius=.083,depth=.008,location=(2.72,-.35,2.414))
 coffeeTop=bpy.context.object; coffeeTop.name="coffee surface"; coffeeTop.data.materials.append(coffee)
 
+# Smartphone prop: upright on the desk, with a readable screen and a subtle incoming notification.
+phoneBodyMat=mat("phone graphite casing",(.025,.035,.05))
+phoneScreenMat=mat("phone glass screen",(.012,.025,.04))
+phoneUI=mat("phone notification panel",(.12,.28,.34))
+phoneGlow=mat("phone notification glow",(.12,.65,.78))
+phoneBody=cube("smartphone casing",(.30,-.47,2.405),(.235,.075,.43),phoneBodyMat,.035)
+phoneGlass=cube("smartphone glass",(.30,-.512,2.405),(.205,.012,.395),phoneScreenMat,.022)
+phoneSpeaker=cube("phone speaker",(.30,-.520,2.585),(.055,.006,.009),laptopKeys,.003)
+phoneBanner=cube("phone notification banner",(.30,-.522,2.455),(.166,.006,.075),phoneUI,.012)
+phoneBannerLine=cube("notification text line",(.31,-.526,2.462),(.105,.004,.008),phoneGlow,.002)
+phoneBadge=ball("notification badge",(.025,.012,.025),mat("notification coral",(.92,.20,.16)))
+phoneBadge.location=(.375,-.528,2.50)
+phoneHome=cube("phone home indicator",(.30,-.521,2.225),(.055,.004,.004),laptopKeys,.002)
+# A small pool of cool light anchors the phone to the desk and gives its alert a visible cue.
+bpy.ops.object.light_add(type="AREA",location=(.30,-.62,2.62))
+phoneLight=bpy.context.object; phoneLight.name="phone notification light"; phoneLight.data.energy=18
+phoneLight.data.color=(.22,.58,.82); phoneLight.data.shape="DISK"; phoneLight.data.size=.45
+phoneLight.rotation_euler=(radians(18),0,0)
+
 # Camera frames a large, readable character while preserving the desk in the right side of the room.
 bpy.ops.object.camera_add(location=(0,-12,2.45))
 cam=bpy.context.object; cam.data.type="ORTHO"; cam.data.ortho_scale=7.2
@@ -177,6 +196,21 @@ def pose(frame):
  hands[0].location=(wristL[0],wristL[1]-.04,wristL[2]); hands[1].location=(wristR[0],wristR[1]-.04,wristR[2])
  feet[0].location=(ankleL[0]+.08,-.12,ankleL[2]); feet[1].location=(ankleR[0]+.08,-.12,ankleR[2])
  feet[0].rotation_euler[1]=-.08; feet[1].rotation_euler[1]=-.08
+
+ # Brief notification pulse and restrained vibration; the phone remains planted on the desk.
+ alert=smooth(0,1,(frame-112)/7)*(1-smooth(0,1,(frame-139)/8))
+ pulse=.72+.28*(.5+.5*math.sin(frame*.48))
+ phoneUI.node_tree.nodes.get("Principled BSDF").inputs["Emission Color"].default_value=(.08,.42,.55,1)
+ phoneUI.node_tree.nodes.get("Principled BSDF").inputs["Emission"].default_value=.18*alert*pulse
+ phoneGlow.node_tree.nodes.get("Principled BSDF").inputs["Emission Color"].default_value=(.10,.75,.95,1)
+ phoneGlow.node_tree.nodes.get("Principled BSDF").inputs["Emission"].default_value=.45*alert*pulse
+ phoneBadge.scale=(.025,.012,.025) if alert>.05 else (.001,.001,.001)
+ phoneBody.rotation_euler[1]=.018*math.sin(frame*2.4)*alert
+ phoneGlass.rotation_euler[1]=phoneBody.rotation_euler[1]
+ phoneBanner.rotation_euler[1]=phoneBody.rotation_euler[1]
+ phoneBannerLine.rotation_euler[1]=phoneBody.rotation_euler[1]
+ phoneBadge.location=(.375,-.528,2.50)
+ phoneLight.data.energy=18*alert*pulse
 
 # Frame handler guarantees continuous connected endpoint motion without detached object-origin rotations.
 def update(scene): pose(scene.frame_current)
