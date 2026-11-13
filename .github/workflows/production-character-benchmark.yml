@@ -1,0 +1,37 @@
+name: WISE-LAB Production Character Benchmark
+on:
+  push:
+    branches: [experiment/comic-book-engine]
+    paths:
+      - 'prototype/production_character_benchmark.py'
+      - '.github/workflows/production-character-benchmark.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wise-production-character-\${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install rendering tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pil ffmpeg espeak-ng fonts-dejavu-core
+      - name: Render production character benchmark
+        run: |
+          mkdir -p renders
+          python3 prototype/production_character_benchmark.py
+          ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate,codec_name -of json renders/wise-lab-production-character-20sec.mp4 | tee renders/production-character-report.json
+      - name: Upload benchmark MP4 and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-production-character-\${{ github.run_number }}
+          path: |
+            renders/wise-lab-production-character-20sec.mp4
+            renders/production-character-report.json
+          if-no-files-found: error
+          retention-days: 7
