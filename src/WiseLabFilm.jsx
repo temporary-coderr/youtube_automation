@@ -76,7 +76,7 @@ const scenes = [
  {start:1350, Component:DawnScene, title:"NOTICE IT. THEN RELEASE IT.", sub:"YOU ARE NOT THAT MOMENT.", caption:"Name the thought, learn what you can, and return to the present."}
 ];
 function Scene({item}){
- const frame=useCurrentFrame(); const local=frame-item.start;
+ const local=useCurrentFrame();
  const zoom=interpolate(local,[0,449],[1.04,1.14],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
  const pan=interpolate(local,[0,269],[-16,18],{extrapolateRight:"clamp"});
  const fade=interpolate(local,[0,24,425,449],[0,1,1,0],{extrapolateRight:"clamp"});
