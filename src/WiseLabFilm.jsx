@@ -70,24 +70,28 @@ function DawnScene(){
  </svg>
 }
 const scenes = [
- {start:0, Component:WindowScene, title:"WHY YOUR BRAIN REPLAYS", sub:"THE MOMENTS YOU REGRET", caption:"Ever replay a tiny awkward moment for hours?"},
- {start:450, Component:HallScene, title:"YOUR BRAIN IS SCANNING", sub:"FOR SOCIAL THREATS", caption:"Your brain treats social mistakes like signals worth studying."},
- {start:900, Component:PhoneScene, title:"THE LOOP FEELS URGENT", sub:"BUT IT ISN'T DANGER", caption:"The memory feels important because your attention keeps returning to it."},
- {start:1350, Component:DawnScene, title:"NOTICE IT. THEN RELEASE IT.", sub:"YOU ARE NOT THAT MOMENT.", caption:"Name the thought, learn what you can, and return to the present."}
+ {start:0, Component:WindowScene, title:"WHY YOUR BRAIN REPLAYS", sub:"THE MOMENTS YOU REGRET", caption:["One awkward moment happens.","Hours later, your mind replays it.","You imagine what you should have said.","The memory feels bigger each time.","But replaying it is not solving it."]},
+ {start:450, Component:HallScene, title:"YOUR BRAIN IS SCANNING", sub:"FOR SOCIAL THREATS", caption:["Your brain is trying to protect you.","It scans for signs of rejection.","A small mistake can feel like a warning.","So your mind studies every detail.","Even when there is no real threat."]},
+ {start:900, Component:PhoneScene, title:"THE LOOP FEELS URGENT", sub:"BUT IT ISN'T DANGER", caption:["Attention keeps feeding the memory.","You check it again and again.","That makes the thought feel urgent.","Urgency is not the same as danger.","You can choose not to follow the loop."]},
+ {start:1350, Component:DawnScene, title:"NOTICE IT. THEN RELEASE IT.", sub:"YOU ARE NOT THAT MOMENT.", caption:["Notice the thought without fighting it.","Take one useful lesson, if there is one.","Then let the replay pass.","Bring your attention back to now.","You are more than one awkward moment."]}
 ];
 function Scene({item}){
  const local=useCurrentFrame();
- const zoom=interpolate(local,[0,449],[1.04,1.14],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
- const pan=interpolate(local,[0,269],[-16,18],{extrapolateRight:"clamp"});
+ const shotFrames=[0,90,180,270,360,449];
+ const zoom=interpolate(local,shotFrames,[1.02,1.12,1.06,1.16,1.08,1.14],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
+ const panX=interpolate(local,shotFrames,[-12,-58,34,-42,48,0],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
+ const panY=interpolate(local,shotFrames,[0,14,-12,18,-10,0],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
+ const beatIndex=Math.min(4,Math.floor(local/90));
+ const beatOpacity=interpolate(local%90,[0,8,82,89],[0,1,1,0],{extrapolateRight:"clamp"});
  const fade=interpolate(local,[0,24,425,449],[0,1,1,0],{extrapolateRight:"clamp"});
  return <AbsoluteFill style={{opacity:fade,background:C.ink}}>
-  <AbsoluteFill style={{transform:`translateX(${pan}px) scale(${zoom})`}}><item.Component/></AbsoluteFill>
+  <AbsoluteFill style={{transform:`translate(${panX}px,${panY}px) scale(${zoom})`}}><item.Component/></AbsoluteFill>
   <div style={{position:"absolute",top:95,left:130,right:130,opacity:interpolate(local,[0,35],[0,1],{extrapolateRight:"clamp"})}}>
    <div style={{fontFamily:"Arial",fontSize:24,fontWeight:700,letterSpacing:8,color:C.gold}}>WISE-LAB  /  HUMAN BEHAVIOUR</div>
    <div style={{fontFamily:"Arial",fontSize:72,fontWeight:900,letterSpacing:1,color:C.cream,marginTop:20,lineHeight:1.03}}>{item.title}</div>
    <div style={{fontFamily:"Arial",fontSize:33,fontWeight:700,letterSpacing:9,color:"#e8c18b",marginTop:16}}>{item.sub}</div>
   </div>
-  <Caption>{item.caption}</Caption><Grain/>
+  <div style={{opacity:beatOpacity}}><Caption>{Array.isArray(item.caption)?item.caption[beatIndex]:item.caption}</Caption></div><Grain/>
  </AbsoluteFill>
 }
 export const WiseLabFilm = () => {
