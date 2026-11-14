@@ -13,7 +13,7 @@ permissions:
 jobs:
   render:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -32,27 +32,28 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Install Edge TTS
         run: python -m pip install --no-cache-dir edge-tts
-      - name: Generate narration
+      - name: Generate narration and word-timed SRT
         run: |
           mkdir -p public out
-          if ! edge-tts --voice en-US-AndrewNeural --rate="-5%" --text "$(cat scripts/narration.txt)" --write-media public/narration.mp3; then
-            echo "Edge TTS unavailable; using offline eSpeak fallback"
-            espeak-ng -v en-us -s 138 -f scripts/narration.txt -w public/narration.wav
-            ffmpeg -hide_banner -loglevel error -y -i public/narration.wav public/narration.mp3
-          fi
+          python scripts/generate_narration.py
           test -s public/narration.mp3
-      - name: Create original ambient bed and transition swells
+          test -s public/captions.srt
+      - name: Create original ambient bed
         run: python scripts/make_ambience.py
-      - name: Render cinematic MP4
-        run: npx remotion render src/index.jsx WiseLab out/wise-lab-cinematic-preview.mp4 --codec h264 --crf 20 --log=error
-      - name: Validate MP4
+      - name: Render illustrated story film
+        run: npx remotion render src/index.jsx WiseLab out/wise-lab-illustrated-story.mp4 --codec h264 --crf 19 --log=error --concurrency=2
+      - name: Validate MP4 and subtitle sidecar
         run: |
-          test -s out/wise-lab-cinematic-preview.mp4
-          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height -of json out/wise-lab-cinematic-preview.mp4
-      - name: Upload MP4 artifact
+          test -s out/wise-lab-illustrated-story.mp4
+          test -s public/captions.srt
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate -of json out/wise-lab-illustrated-story.mp4
+          ffmpeg -v error -i out/wise-lab-illustrated-story.mp4 -f null -
+      - name: Upload video and subtitles
         uses: actions/upload-artifact@v4
         with:
-          name: wise-lab-cinematic-preview
-          path: out/wise-lab-cinematic-preview.mp4
+          name: wise-lab-illustrated-story-v2
+          path: |
+            out/wise-lab-illustrated-story.mp4
+            public/captions.srt
           if-no-files-found: error
           retention-days: 14
