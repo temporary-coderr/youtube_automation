@@ -18,6 +18,9 @@ function backdrop(scene,t){let sky=g.createLinearGradient(0,0,0,H);let stops=sce
 }
 function phone(x,y,angle=0){g.save();g.translate(x,y);g.rotate(angle);round(-24,-45,48,90,9,'#0b1421');round(-18,-37,36,73,5,'#9ce5d4');round(-7,31,14,3,2,'#203a45');g.restore()}
 function character(x,ground,t,mode,phase,phoneHeld){
+ // Apply the requested world-space horizontal position. Without this transform
+ // the rig was drawn around x=0 and clipped off the left edge of the canvas.
+ g.save();g.translate(x,0);
  // local origin at pelvis; all joints share a rig hierarchy and feet use stance locks.
  const walk=mode==='walk',reach=mode==='reach',settle=mode==='settle';
  const cycle=phase*TAU, stride=walk?Math.sin(cycle):0;
@@ -56,7 +59,8 @@ function character(x,ground,t,mode,phase,phoneHeld){
  round(-19,-42,38,42,11,'#a96f55');oval(0,-87,57,67,'#b98265');
  // hair silhouette
  g.beginPath();g.moveTo(-56,-88);g.quadraticCurveTo(-70,-154,-9,-157);g.quadraticCurveTo(55,-164,60,-93);g.quadraticCurveTo(30,-119,5,-121);g.quadraticCurveTo(-25,-104,-49,-72);g.closePath();g.fillStyle='#171e2a';g.fill();
- oval(-21,-87,4,3,'#392d2b');oval(21,-87,4,3,'#392d2b');line({x:-30,y:-105},{x:-12,y:-107},4,'#392d2b');line({x:12,y:-107},{x:30,y:-105},4,'#392d2b');g.restore();
+ oval(-21,-87,4,3,'#392d2b');oval(21,-87,4,3,'#392d2b');line({x:-30,y:-105},{x:-12,y:-107},4,'#392d2b');line({x:12,y:-105},{x:30,y:-105},4,'#392d2b');g.restore();
+ g.restore(); // character world-position transform
 }
 function renderAt(t){t=clamp(t,0,12);let scene=t<4?0:t<8?1:2,local=t-scene*4;backdrop(scene,t);
  const fade=ease(Math.min(local/.45,(4-local)/.45));g.save();let zoom=scene===0?1.04+ease(local/4)*.04:scene===1?1.08-ease(local/4)*.05:1.03+ease(local/4)*.04;g.translate(960,540);g.scale(zoom,zoom);g.translate(-960+ (scene===0?-local*12:scene===2?local*10:0),-540);
