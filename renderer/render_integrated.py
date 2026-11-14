@@ -33,6 +33,22 @@ def main():
         page = browser.new_page(viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1)
         page.goto(HTML.as_uri(), wait_until="load")
         page.wait_for_function("typeof window.renderAt === 'function'")
+        # Fail the render if the full character's face is not actually on-canvas.
+        for t, cx in ((2.0, 670), (6.0, 950), (10.0, 894)):
+            page.evaluate("(t) => window.renderAt(t)", t)
+            skin_pixels = page.evaluate("""(cx) => {
+                const ctx = document.querySelector('#c').getContext('2d');
+                const d = ctx.getImageData(cx-58, 315, 116, 125).data;
+                let n = 0;
+                for (let i=0; i<d.length; i+=4) {
+                    const [r,g,b,a] = d.slice(i,i+4);
+                    if (a>200 && r>125 && g>65 && b>35 && r>g*1.12 && g>b*1.08) n++;
+                }
+                return n;
+            }""", cx)
+            print(f"CHARACTER_FACE_PIXELS t={t}: {skin_pixels}")
+            if skin_pixels < 900:
+                raise RuntimeError(f"Character face missing at t={t}; found only {skin_pixels} skin pixels")
         for frame in range(FPS * DURATION):
             t = frame / FPS
             page.evaluate("(t) => window.renderAt(t)", t)
