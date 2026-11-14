@@ -1,0 +1,47 @@
+name: Illustrated Cutout Static Validation
+on:
+  push:
+    branches: [feature/illustrated-cutout-renderer]
+    paths:
+      - "production/ora_cutout_renderer.py"
+      - "prototype/illustrated_2d/rig-map.example.json"
+      - ".github/workflows/illustrated-cutout-lint.yml"
+  pull_request:
+    branches: [experiment/illustrated-2d-rig]
+    paths:
+      - "production/ora_cutout_renderer.py"
+      - "prototype/illustrated_2d/rig-map.example.json"
+      - ".github/workflows/illustrated-cutout-lint.yml"
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile renderer
+        run: python -m py_compile production/ora_cutout_renderer.py
+      - name: Validate rig hierarchy and layer pivots
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("prototype/illustrated_2d/rig-map.example.json")
+          rig = json.loads(p.read_text())
+          bones = rig["bones"]
+          required = {"root", "torso", "head", "upper_arm_R", "forearm_R", "hand_R"}
+          assert required.issubset(bones), f"missing bones: {required-set(bones)}"
+          for name, bone in bones.items():
+              parent = bone.get("parent")
+              assert parent is None or parent in bones, f"{name}: missing parent {parent}"
+          for name, layer in rig["layers"].items():
+              bone = layer["bone"]
+              assert bone in bones, f"{name}: missing attachment bone {bone}"
+              px, py = layer["pivot"]
+              bx, by = bones[bone]["head"]
+              assert abs(px-bx) <= 3 and abs(py-by) <= 3, f"{name}: pivot does not match {bone} head"
+          print(f"Validated {len(bones)} bones and {len(rig['layers'])} painted layer mappings")
+          PY
