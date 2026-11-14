@@ -23,7 +23,9 @@ concurrency:
 
 jobs:
   render:
-    runs-on: ubuntu-latest
+    # Pin the known-supported runner image; ubuntu-latest can move to a
+    # newly released image before the pinned Playwright version supports it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - name: Check out source
