@@ -2,6 +2,14 @@
   "name": "wise-lab-cinematic",
   "version": "1.0.0",
   "private": true,
-  "scripts": { "render": "remotion render src/index.jsx WiseLab out/wise-lab-cinematic-preview.mp4 --codec h264 --crf 20" },
-  "dependencies": { "@remotion/cli": "4.0.320", "remotion": "4.0.320", "react": "18.3.1", "react-dom": "18.3.1" }
+  "scripts": {
+    "render": "remotion render src/index.jsx WiseLab out/wise-lab-cinematic-preview.mp4 --codec h264 --crf 20",
+    "render:cricket": "remotion render src/index.jsx CricketStory out/cricket-storybook-30s.mp4 --codec h264 --crf 18"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.320",
+    "remotion": "4.0.320",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
 }
