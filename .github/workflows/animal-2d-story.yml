@@ -1,0 +1,78 @@
+name: WISE-LAB 2D Animal Story Pilot
+on:
+  push:
+    branches: [wise-lab-animal-2d-pilot]
+    paths:
+      - "prototype/animal_2d_story_renderer.py"
+      - ".github/workflows/animal-2d-story.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wise-lab-animal-2d-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install 2D renderer, neural narration and video tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-cairosvg python3-pil ffmpeg fonts-dejavu-core
+          python3 -m pip install --user --break-system-packages edge-tts
+          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
+      - name: Render illustrated animal story
+        run: |
+          set -euo pipefail
+          mkdir -p renders/animal-2d
+          python3 -u prototype/animal_2d_story_renderer.py
+          test -s renders/animal-2d/wise-lab-fox-and-turtle.mp4
+          test -s renders/animal-2d/captions.srt
+          test -s renders/animal-2d/contact-sheet.jpg
+          test -s renders/animal-2d/render-report.json
+      - name: Validate final video and subtitle timing
+        run: |
+          set -euo pipefail
+          ffprobe -v error \
+            -show_entries format=duration,size \
+            -show_entries stream=codec_type,codec_name,width,height,avg_frame_rate,duration \
+            -of json renders/animal-2d/wise-lab-fox-and-turtle.mp4 | tee renders/animal-2d/ffprobe.json
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+          probe = json.loads(Path("renders/animal-2d/ffprobe.json").read_text())
+          report = json.loads(Path("renders/animal-2d/render-report.json").read_text())
+          duration = float(probe["format"]["duration"])
+          video = next(s for s in probe["streams"] if s["codec_type"] == "video")
+          audio = next(s for s in probe["streams"] if s["codec_type"] == "audio")
+          assert video["codec_name"] == "h264", video
+          assert (video["width"], video["height"]) == (1280, 720), video
+          assert video["avg_frame_rate"] == "24/1", video
+          assert audio["codec_name"] == "aac", audio
+          assert abs(duration - float(report["duration_seconds"])) < 0.15, (duration, report)
+          assert abs(float(video["duration"]) - float(audio["duration"])) < 0.15, (video, audio)
+          srt = Path("renders/animal-2d/captions.srt").read_text(encoding="utf-8")
+          cues = re.findall(r"(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})", srt)
+          assert len(cues) == 6, f"Expected six subtitle cues, found {len(cues)}"
+          def sec(value):
+              h, m, rem = value.split(":")
+              ss, ms = rem.split(",")
+              return int(h)*3600 + int(m)*60 + int(ss) + int(ms)/1000
+          assert all(sec(a) < sec(b) <= duration + .1 for a, b in cues), "SRT cue outside video"
+          print(f"VALIDATED: {duration:.2f}s 1280x720 H.264/AAC at 24fps; {len(cues)} SRT cues")
+          PY
+      - name: Upload MP4, subtitles, contact sheet and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-animal-2d-pilot-${{ github.run_number }}
+          path: |
+            renders/animal-2d/wise-lab-fox-and-turtle.mp4
+            renders/animal-2d/captions.srt
+            renders/animal-2d/contact-sheet.jpg
+            renders/animal-2d/render-report.json
+            renders/animal-2d/ffprobe.json
+            renders/animal-2d/narration.txt
+          if-no-files-found: error
+          retention-days: 14
