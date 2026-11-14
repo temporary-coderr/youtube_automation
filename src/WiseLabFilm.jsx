@@ -24,17 +24,22 @@ function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=
   const pants = lead ? "#182333" : "#27364a";
   const hair = lead ? "#15171d" : "#211b1a";
   const gait = Math.sin(frame*.17);
-  const bob = walkAmount ? Math.abs(gait)*8 : Math.sin(frame*.055)*1.8;
+  const walkTravel = walkAmount ? lerp(frame,0,119,0,176*walkAmount) : 0;
+  const bob = walkAmount ? Math.abs(gait)*11 : Math.sin(frame*.055)*2.8;
   const stride = gait*walkAmount;
-  const armA = action==="gesture" ? -72 : action==="reach" ? -94 : action==="phone" ? -112 : action==="think" ? -43 : stride*24;
-  const armB = action==="gesture" ? 32 : action==="reach" ? 18 : action==="phone" ? -18 : action==="think" ? -65 : -stride*24;
-  const bodyTurn = action==="turn" ? lerp(frame,0,100,0,10) : 0;
+  const gestureWave = Math.sin(frame*.22)*19 + Math.sin(frame*.09)*7;
+  const reach = lerp(frame,0,66,0,1);
+  const armA = action==="gesture" ? -67+gestureWave : action==="reach" ? -132+reach*43+Math.sin(frame*.18)*5 : action==="phone" ? -104+Math.sin(frame*.1)*5 : action==="think" ? -43+Math.sin(frame*.08)*5 : stride*36;
+  const armB = action==="gesture" ? 30+Math.sin(frame*.2+1)*15 : action==="reach" ? 18-reach*24 : action==="phone" ? -28+Math.sin(frame*.12)*6 : action==="think" ? -60+Math.sin(frame*.07)*5 : -stride*34;
+  const bodyTurn = action==="turn" ? lerp(frame,0,100,-14,18) : action==="reach" ? lerp(frame,0,65,0,7) : action==="think" ? Math.sin(frame*.055)*3 : 0;
+  const headTurn = action==="turn" ? lerp(frame,0,100,12,-14) : action==="think" ? 7+Math.sin(frame*.06)*3 : action==="phone" ? -8 : 0;
   const sit = action==="sit";
+  const torsoDrop = sit ? 17+Math.sin(frame*.07)*2 : action==="reach" ? -3 : 0;
   const blink = (frame%97)>92 || (frame%149)>144;
   const mouth = talk && Math.sin(frame*.58)>0.04;
   const leftLeg = stride*29 + (sit?-18:0);
   const rightLeg = -stride*29 + (sit?24:0);
-  return <g transform={"translate("+x+" "+(y+bob)+") scale("+s*facing+" "+s+")"}>
+  return <g transform={"translate("+(x+walkTravel)+" "+(y+bob)+") scale("+s*facing+" "+s+")"}>
     <ellipse cx="0" cy="-2" rx="100" ry="19" fill="#070c12" opacity=".4"/>
     <g transform={"rotate("+leftLeg+" -37 -150)"}>
       <path d="M-55 -180 Q-68 -108 -46 -34 L-40 -4 Q-27 9 5 2 L9 -22 L-6 -110 L-4 -184Z" fill={pants}/>
@@ -48,7 +53,7 @@ function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=
       <path d="M29 3 Q60 -8 88 4 L98 19 Q67 34 17 22 Q10 11 29 3Z" fill="#111820"/>
       <path d="M60 -151 L66 -55" stroke="#45505c" strokeWidth="4" opacity=".65"/>
     </g>
-    <g transform={"rotate("+bodyTurn+" 0 -340)"}>
+    <g transform={"translate(0 "+torsoDrop+") rotate("+bodyTurn+" 0 -340)"}>
       <path d="M-87 -390 Q-116 -360 -105 -278 L-84 -177 Q-2 -151 84 -177 L106 -278 Q116 -361 87 -390 Q42 -420 0 -415 Q-46 -420 -87 -390Z" fill={shirt}/>
       <path d="M-64 -374 Q-48 -403 0 -403 Q48 -403 64 -374 L44 -310 Q0 -286 -44 -310Z" fill="#172638"/>
       <path d="M-27 -398 L0 -345 L27 -398" stroke="#78889a" strokeWidth="5" fill="none" opacity=".65"/>
@@ -72,7 +77,7 @@ function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=
       <path d="M91 -188 Q71 -188 69 -170 Q76 -157 95 -169 Q109 -180 91 -188Z" fill={skin}/>
       <path d="M85 -181 L79 -165 M95 -179 L91 -162" stroke="#8d5948" strokeWidth="3" strokeLinecap="round"/>
     </g>
-    <g transform={"translate(0 -465) rotate("+bodyTurn+")"}>
+    <g transform={"translate(0 -465) rotate("+headTurn+")"}>
       <path d="M-66 -16 Q-69 -100 -24 -127 Q28 -147 65 -88 Q82 -54 55 30 Q33 73 -16 67 Q-61 51 -66 -16Z" fill={skin}/>
       <path d="M-66 -31 Q-94 -112 -38 -150 Q12 -184 62 -142 Q94 -113 71 -62 L49 -83 Q22 -69 -5 -83 Q-26 -97 -51 -49Z" fill={hair}/>
       {lead ? <path d="M-52 -83 Q-72 -144 -17 -170 Q12 -184 43 -163 Q8 -152 8 -125 Q-19 -113 -52 -83Z" fill="#20242c"/> :
@@ -96,7 +101,7 @@ function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=
 }
 
 function CafeSet({frame=0}){
-  const rain = Array.from({length:34},(_,i)=><path key={i} d={"M"+(105+i*49)+" "+(140+(i*37)%450)+" l-12 35"} stroke="#b6d4e2" strokeWidth="3" opacity=".45"/>);
+  const rain = Array.from({length:34},(_,i)=><path key={i} d={"M"+(105+i*49)+" "+(140+(i*37)%450)+" l-12 35"} transform={"translate(0 "+((frame*7+i*13)%62)+")"} stroke="#b6d4e2" strokeWidth="3" opacity=".45"/>);
   const steam = i => <path d={"M"+(i*45-12)+" "+(770-(frame%55)*.45)+" q-24 -28 0 -53 q20 -23 0 -46"} stroke="#f0d9b7" strokeWidth="5" fill="none" opacity={.32+Math.sin(frame*.09+i)*.12}/>;
   return <g>
     <rect width={W} height={H} fill="#24323a"/>
@@ -275,7 +280,7 @@ function DeskProps({frame=0,phone=true,faceDown=false}){
   <rect x="930" y="714" width="110" height="38" rx="5" fill="#b9a286"/>
   <path d="M950 725 H1020 M950 736 H1010" stroke="#75634f" strokeWidth="4"/>
   <Cup x={460} y={748} frame={frame}/>
-  {phone && <Phone x={faceDown?1130:1190} y={faceDown?722:680} frame={frame} tilt={faceDown?82:lerp(frame,0,119,-5,5)} screen={!faceDown} glow={!faceDown}/>}
+  {phone && <Phone x={(faceDown?1130:1190)+Math.sin(frame*.75)*3} y={faceDown?722:680+Math.sin(frame*.55)*2} frame={frame} tilt={faceDown?lerp(frame,0,46,0,82):lerp(frame,0,119,-8,8)} screen={!faceDown || frame<38} glow={!faceDown && pulse(frame)>.25}/>} 
   <g opacity=".8"><rect x="375" y="620" width="80" height="92" rx="5" fill="#7b5a3d"/><path d="M387 638 H443 M387 651 H437 M387 664 H430" stroke="#d9c3a0" strokeWidth="4"/></g>
  </g>;
 }
