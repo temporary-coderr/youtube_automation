@@ -179,7 +179,7 @@ def fox_svg(x: float, ground: float, t: float, scene: int, u: float) -> str:
     elif scene in (3, 4):
         root_x = 625; stride = 0.0
     else:
-        root_x = mix(625, 580, ease(u)); stride = 0.85
+        root_x = mix(625, 500, ease(u)); stride = 0.85
     phase = t * 7.8
     bob = abs(math.sin(phase)) * 5.0 * stride
     tail = 8 * math.sin(t * 3.8) + (7 if scene == 1 else 0)
@@ -251,10 +251,10 @@ def turtle_svg(x: float, ground: float, t: float, scene: int, u: float) -> str:
         root_x = 1065
         walk = 0.12 if scene == 1 else 0.0
     elif scene == 4:
-        root_x = mix(1065, 880, ease(u))
+        root_x = mix(1065, 745, ease(u))
         walk = 1.0
     else:
-        root_x = 880
+        root_x = 745
         walk = 0.10
     phase = t * 8.4
     bob = abs(math.sin(phase)) * 3.2 * walk
@@ -332,8 +332,8 @@ def background_svg(t: float, scene: int, u: float) -> str:
     fx.append('<ellipse cx="760" cy="505" rx="57" ry="22" fill="#657966" stroke="#405744" stroke-width="7"/><path d="M730 501Q757 478 786 496" stroke="#a2ad8b" stroke-width="5" fill="none"/>')
     fx.append('<ellipse cx="1030" cy="498" rx="64" ry="24" fill="#75816b" stroke="#405744" stroke-width="7"/><path d="M991 496Q1024 474 1059 491" stroke="#b2b68c" stroke-width="5" fill="none"/>')
     log_progress = ease(u) if scene == 3 else (1.0 if scene >= 4 else 0.0)
-    log_angle = mix(30, -3, log_progress)
-    log_x = mix(690, 835, log_progress)
+    log_angle = mix(0, -3, log_progress)
+    log_x = mix(1170, 835, log_progress)
     log_y = mix(467, 468, log_progress)
     fx.append(f'<g transform="translate({log_x:.2f} {log_y:.2f}) rotate({log_angle:.2f})">')
     fx.append('<path d="M-188 -5Q-168 -35 -128 -25L143 -29Q182 -18 192 5Q174 34 131 27L-151 26Q-183 22 -188 -5Z" fill="url(#bark)" stroke="#543b2e" stroke-width="8"/>')
