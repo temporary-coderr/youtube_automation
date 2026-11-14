@@ -44,7 +44,7 @@ jobs:
           ffmpeg -hide_banner -loglevel error -y -i renders/framebyframe-benchmark.mp4 -i renders/framebyframe-narration.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 160k -shortest renders/framebyframe-benchmark-narrated.mp4
       - name: Validate rendered videos
         run: |
-          for f in renders/wise-lab-comic-20sec.mp4 renders/wise-lab-reference-style-18sec.mp4 renders/framebyframe-benchmark-narrated.mp4; do
+          for f in renders/wise-lab-comic-20sec.mp4 renders/wise-lab-reference-style-18sec.mp4 renders/framebyframe-benchmark-narrated.mp4 renders/wise-lab-cinematic-2d.mp4; do
             test -s "$f"
             ffprobe -v error -show_entries format=duration:stream=codec_type,width,height -of compact=p=0 "$f"
           done
