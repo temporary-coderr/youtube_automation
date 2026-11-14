@@ -49,7 +49,7 @@ export async function captureStudioExample(h:Harness) {
   await ready();const project=buildPilot();
   const times=[project.actors[0].beats.reduce((s,b)=>s+b.duration,0),project.actors[1].beats.reduce((s,b)=>s+b.duration,0),project.shots.reduce((s,b)=>s+b.duration,0)];
   if(times.some(v=>Math.abs(v-15)>.01))throw new Error('Action and camera tracks must run exactly 15 seconds.');
-  await e('(async()=>{await studio.setProject('+JSON.stringify(project)+';)})()'.replace('+;','')));
+  await e('(async()=>{await studio.setProject('+JSON.stringify(project)+');})()');
   await ready();await pause(500);
   const info=await e<{actors:number;duration:number;clips:string[]}>('(()=>({actors:studio.project.actors.length,duration:Math.max(...studio.project.actors.map(a=>a.beats.reduce((s,b)=>s+b.duration,0)),studio.project.shots.reduce((s,b)=>s+b.duration,0)),clips:studio.project.actors.flatMap(a=>a.beats.map(b=>b.clip))}))()');
   if(info.actors!==2||info.duration<14.99||!info.clips.includes('texting')||!info.clips.includes('walk'))throw new Error('WISE-LAB story project failed validation: '+JSON.stringify(info));
