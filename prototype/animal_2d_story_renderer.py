@@ -455,7 +455,7 @@ def render() -> dict:
         proc.wait()
         raise
     subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-i", str(MP4),
-                    "-vf", "fps=1,scale=480:-1,tile=4x3", "-frames:v", "1", str(CONTACT)], check=True)
+                    "-vf", "fps=0.5,scale=480:-1,tile=4x3", "-frames:v", "1", str(CONTACT)], check=True)
     report = {
         "engine": "WISE-LAB illustrated animal cutout + 2.5D camera",
         "story": "Finn the fox and Olive the turtle build a bridge across a forest stream",
