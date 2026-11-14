@@ -99,7 +99,7 @@ def make_narration() -> tuple[list[float], float]:
     durations: list[float] = []
     channels, width, rate = 1, 2, 24000
     silence_seconds = 0.28
-    silence = b"\\x00" * int(rate * silence_seconds) * channels * width
+    silence = b"\x00" * int(rate * silence_seconds) * channels * width
     for i, scene in enumerate(STORY):
         mp3_path = temp / f"line_{i+1:02d}.mp3"
         wav_path = temp / f"line_{i+1:02d}.wav"
@@ -240,8 +240,10 @@ def fox_svg(x: float, ground: float, t: float, scene: int, u: float) -> str:
     elif scene in (1, 2):
         root_x = 500 if scene == 1 else mix(500, 625, ease(u))
         stride = 0.0 if scene == 1 else 0.35 * (1.0 - ease(u))
-    elif scene in (3, 4):
+    elif scene == 3:
         root_x = 625; stride = 0.0
+    elif scene == 4:
+        root_x = mix(625, 390, ease(u)); stride = 0.65 * (1.0 - ease(u))
     else:
         root_x = 390; stride = 0.0
     phase = t * 7.8
