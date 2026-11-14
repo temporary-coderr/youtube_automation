@@ -37,6 +37,8 @@ jobs:
           mkdir -p public out
           edge-tts --voice en-US-AndrewNeural --rate="-5%" --text "$(cat scripts/narration.txt)" --write-media public/narration.mp3
           test -s public/narration.mp3
+      - name: Create original ambient bed and transition swells
+        run: python scripts/make_ambience.py
       - name: Render cinematic MP4
         run: npx remotion render src/index.jsx WiseLab out/wise-lab-cinematic-preview.mp4 --codec h264 --crf 20 --log=error
       - name: Validate MP4
