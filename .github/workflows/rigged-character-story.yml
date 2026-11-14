@@ -1,0 +1,55 @@
+name: WISE-LAB Rigged 2D Character Story Prototype
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/cinematic-engine]
+    paths:
+      - 'prototype/rigged_character_engine.html'
+      - 'prototype/render_rigged_story.py'
+      - '.github/workflows/rigged-character-story.yml'
+permissions:
+  contents: read
+concurrency:
+  group: wise-lab-rigged-character-story
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install renderer and browser
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Render 12-second rigged character scene
+        run: |
+          set -euo pipefail
+          python prototype/render_rigged_story.py
+          test -s renders/wise-lab-rigged-character-12sec.mp4
+      - name: Build contact sheet and validate
+        run: |
+          set -euo pipefail
+          ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-rigged-character-12sec.mp4 -vf "fps=1,scale=480:-1,tile=4x3" -frames:v 1 renders/rigged-character-contact-sheet.jpg
+          duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 renders/wise-lab-rigged-character-12sec.mp4)
+          python - "$duration" <<'PY'
+          import sys
+          d=float(sys.argv[1])
+          assert 11.9 <= d <= 12.1, f"duration out of range: {d}"
+          print(f"Validated duration: {d:.3f}s")
+          PY
+      - name: Upload prototype for visual review
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-rigged-character-story
+          path: |
+            renders/wise-lab-rigged-character-12sec.mp4
+            renders/rigged-character-contact-sheet.jpg
+          if-no-files-found: error
+          retention-days: 7
