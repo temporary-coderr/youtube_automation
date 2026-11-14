@@ -59,5 +59,17 @@ if __name__ == "__main__":
     try:
         asyncio.run(generate())
     except Exception as exc:
-        print(f"Edge TTS with word timing failed: {exc}")
-        raise
+        print(f"Edge TTS unavailable; creating offline narration and estimated SRT: {exc}")
+        wav = ROOT / "public/narration.wav"
+        subprocess.run(["espeak-ng", "-v", "en-us", "-s", "138", "-f", str(ROOT / "scripts/narration.txt"), "-w", str(wav)], check=True)
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(wav), str(AUDIO)], check=True)
+        duration = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(AUDIO)], text=True).strip())
+        tokens = re.findall(r"\\S+", TEXT)
+        groups = [tokens[i:i+7] for i in range(0, len(tokens), 7)]
+        total = sum(len(x) for x in tokens) or 1
+        cursor, lines = 0.0, []
+        for i, group in enumerate(groups, 1):
+            span = duration * sum(len(x) for x in group) / total
+            lines += [str(i), f"{stamp(cursor)} --> {stamp(cursor + span)}", " ".join(group), ""]
+            cursor += span
+        SRT.write_text("\\n".join(lines), encoding="utf-8")
