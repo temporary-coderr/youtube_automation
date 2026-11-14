@@ -19,5 +19,5 @@ audio = next((s for s in streams if s.get("codec_type") == "audio"), None)
 duration = float(data.get("format", {}).get("duration", 0))
 assert video and video.get("width") == 1280 and video.get("height") == 720, data
 assert audio, f"No audio stream: {data}"
-assert 19.0 <= duration <= 21.0, f"Unexpected duration {duration:.2f}s"
+assert 11.8 <= duration <= 12.2, f"Unexpected duration {duration:.2f}s"
 print(f"PASS: {path} | {video['width']}x{video['height']} | {duration:.2f}s | video={video['codec_name']} audio={audio['codec_name']}")
