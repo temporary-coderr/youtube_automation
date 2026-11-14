@@ -1,0 +1,74 @@
+name: WISE-LAB Renderer Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: "Preview duration in seconds"
+        required: true
+        default: "12"
+  push:
+    branches: [production/renderer-v1]
+    paths:
+      - "renderer/**"
+      - "prototype/**"
+      - ".github/workflows/renderer-smoke-test.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wise-lab-renderer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+
+      - name: Render MP4 preview
+        env:
+          PREVIEW_DURATION: ${{ inputs.duration || '12' }}
+        run: |
+          python renderer/render_video.py \
+            --scene prototype/index.html \
+            --output output/wise-lab-preview.mp4 \
+            --duration "$PREVIEW_DURATION" \
+            --fps 30 --width 1920 --height 1080
+
+      - name: Verify MP4 stream
+        run: |
+          ffprobe -v error -select_streams v:0 \
+            -show_entries stream=codec_name,width,height,r_frame_rate \
+            -of default=noprint_wrappers=1 output/wise-lab-preview.mp4
+          test -s output/wise-lab-preview.mp4
+
+      - name: Upload preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-renderer-preview
+          path: output/wise-lab-preview.mp4
+          if-no-files-found: error
+          retention-days: 7
