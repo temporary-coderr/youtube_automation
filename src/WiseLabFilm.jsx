@@ -11,16 +11,16 @@ const C={ink:"#101827",cream:"#f5eee2",gold:"#e7b35d",skin:"#bd8060",hood:"#2939
 const ease=Easing.inOut(Easing.cubic);
 const clamp={extrapolateLeft:"clamp",extrapolateRight:"clamp"};
 const mix=(f,points,values)=>interpolate(f,points,values,{...clamp,easing:ease});
-const Caption=({children})=><div style={{position:"absolute",left:150,right:150,bottom:72,textAlign:"center",font:"700 39px Arial",letterSpacing:.2,color:"#fff",textShadow:"0 3px 16px #000,0 1px 4px #000"}}>{children}</div>;
+const Caption=({children})=><div style={{position:"absolute",left:250,right:250,bottom:58,display:"flex",justifyContent:"center"}}><div style={{maxWidth:1320,padding:"18px 34px",borderRadius:12,background:"rgba(8,14,24,.78)",border:"1px solid rgba(245,238,226,.22)",textAlign:"center",font:"700 36px/1.22 Arial,sans-serif",letterSpacing:.15,color:"#fff",textShadow:"0 2px 8px #000"}}>{children}</div></div>;
 const Grain=()=> <div style={{position:"absolute",inset:0,pointerEvents:"none",opacity:.075,backgroundImage:"radial-gradient(#fff .6px,transparent .9px)",backgroundSize:"5px 5px"}}/>;
 
-function Character({x=960,y=670,s=1,pose="idle",f=0,shirt=C.hood,skin=C.skin}){
+function Character({x=960,y=670,s=1,pose="idle",f=0,shirt=C.hood,skin=C.skin,talk=false}){
  const walk=Math.sin(f*.19), bob=pose==="walk"?Math.abs(walk)*10:Math.sin(f*.07)*2;
  const reach=pose==="reach"||pose==="phone"||pose==="wave";
  const arm=pose==="phone"?-62:pose==="reach"?-82:pose==="wave"?-112:pose==="think"?-35:pose==="walk"?walk*28:0;
  const other=pose==="walk"?-walk*28:pose==="think"?-48:pose==="phone"?18:0;
  const leg=pose==="walk"?walk*27:pose==="sit"?-14:0;
- const headTurn=pose==="turn"?mix(f,[0,35,90,119],[0,18,18,0]):pose==="phone"?12:0;
+ const headTurn=pose==="turn"?mix(f,[0,35,90,119],[0,18,18,0]):pose==="phone"?12:0;\n const blink=(f%91)>86 || (f%137)>132;\n const mouthOpen=talk && Math.sin(f*.62)>0.05;
  return <g transform={`translate(${x} ${y+bob}) scale(${s})`}>
   <ellipse cx="0" cy="12" rx="115" ry="18" fill="#070d16" opacity=".34"/>
   <g transform="translate(-38 -8) rotate(${leg} 0 0)"><path d="M-26 -5 L-34 140 L-24 210 L12 210 L5 130 L18 4Z" fill="#151e2c"/><path d="M-30 194 L14 194 L25 214 L-42 214Z" fill="#0b111b"/></g>
@@ -42,8 +42,8 @@ function Room({night=true,location="bedroom",f=0}){
  return <svg viewBox="0 0 1920 1080" width="100%" height="100%" style={{position:"absolute"}}>
   <defs><linearGradient id="wall" x2="0" y2="1"><stop stopColor={night?"#18273b":"#d6c4a9"}/><stop offset="1" stopColor={night?"#35495a":"#a98e75"}/></linearGradient></defs>
   <rect width="1920" height="1080" fill="url(#wall)"/>
-  {location==="bedroom"&&<><rect x="1190" y="100" width="470" height="470" rx="8" fill="#0c1524" stroke="#927d69" strokeWidth="24"/><rect x="1215" y="125" width="420" height="420" fill={outside}/><circle cx={mix(f,[0,119],[1450,1480])} cy="250" r="62" fill={night?"#f2d8a3":"#f4d28a"}/><path d="M1215 450 L1360 310 L1470 420 L1560 280 L1635 390 L1635 545 L1215 545Z" fill="#24394c"/><rect x="0" y="770" width="1920" height="310" fill="#55483f"/><rect x="180" y="750" width="930" height="34" rx="8" fill="#9a7858"/><path d="M250 784 L230 1080 M1040 784 L1070 1080" stroke="#302b2b" strokeWidth="30"/></>}
-  {location==="cafe"&&<><rect y="790" width="1920" height="290" fill="#4c3b34"/><rect x="150" y="130" width="560" height="470" fill="#385568" stroke="#c39d74" strokeWidth="18"/><path d="M150 430 L710 430" stroke="#c39d74" strokeWidth="12"/><circle cx="330" cy="270" r="5" fill="#f7d79b"/><rect x="1120" y="670" width="620" height="24" fill="#9d7958"/><path d="M1180 694 L1160 930 M1680 694 L1700 930" stroke="#594536" strokeWidth="24"/><circle cx="1500" cy="480" r="95" fill="#27394b"/><path d="M1410 560 Q1500 500 1590 560 L1620 690 L1380 690Z" fill="#687b78"/></>}
+  {location==="bedroom"&&<><circle cx="820" cy="420" r="520" fill="#e6b879" opacity=".035"/><rect x="1190" y="100" width="470" height="470" rx="8" fill="#0c1524" stroke="#927d69" strokeWidth="24"/><rect x="1215" y="125" width="420" height="420" fill={outside}/><circle cx={mix(f,[0,119],[1450,1480])} cy="250" r="62" fill={night?"#f2d8a3":"#f4d28a"}/><path d="M1215 450 L1360 310 L1470 420 L1560 280 L1635 390 L1635 545 L1215 545Z" fill="#24394c"/><rect x="0" y="770" width="1920" height="310" fill="#55483f"/><rect x="180" y="750" width="930" height="34" rx="8" fill="#9a7858"/><path d="M250 784 L230 1080 M1040 784 L1070 1080" stroke="#302b2b" strokeWidth="30"/></>}
+  {location==="cafe"&&<><rect y="790" width="1920" height="290" fill="#4c3b34"/><circle cx="420" cy="520" r="360" fill="#e6ad70" opacity=".07"/><circle cx="1420" cy="450" r="300" fill="#e6ad70" opacity=".06"/><path d="M0 760 Q500 710 960 760 T1920 735" stroke="#d7b58c" strokeWidth="5" opacity=".25" fill="none"/><rect x="150" y="130" width="560" height="470" fill="#385568" stroke="#c39d74" strokeWidth="18"/><path d="M150 430 L710 430" stroke="#c39d74" strokeWidth="12"/><circle cx="330" cy="270" r="5" fill="#f7d79b"/><rect x="1120" y="670" width="620" height="24" fill="#9d7958"/><path d="M1180 694 L1160 930 M1680 694 L1700 930" stroke="#594536" strokeWidth="24"/><circle cx="1500" cy="480" r="95" fill="#27394b"/><path d="M1410 560 Q1500 500 1590 560 L1620 690 L1380 690Z" fill="#687b78"/></>}
   {location==="hall"&&<><path d="M0 0 L650 0 L920 1080 L0 1080Z" fill="#344c5d"/><path d="M1920 0 L1270 0 L1000 1080 L1920 1080Z" fill="#263b4d"/><path d="M0 850 L1920 850 L1920 1080 L0 1080Z" fill="#28313a"/>{Array.from({length:6},(_,i)=><g key={i}><rect x={i*340+70} y="150" width="160" height="430" fill="#d3a67a" opacity=".12"/><circle cx={i*340+150} cy="140" r="24" fill="#f3c87d"/></g>)}</>}
   {location==="park"&&<><circle cx="1480" cy="250" r="140" fill="#f5d29a"/><path d="M0 660 L240 430 L480 690 L720 380 L980 700 L1280 450 L1540 690 L1760 420 L1920 620 L1920 1080 L0 1080Z" fill="#506b65"/><path d="M0 820 Q500 720 1000 830 T1920 790 L1920 1080 L0 1080Z" fill="#263f3c"/><path d="M0 930 Q600 860 1200 930 T1920 900" stroke="#d8b58b" strokeWidth="10" fill="none" opacity=".5"/></>}
  </svg>;
@@ -62,10 +62,10 @@ function Shot({shot}){
   <AbsoluteFill style={{transform:`translateX(${cam+Math.sin(t*Math.PI*2)*8}px) scale(${zoom})`}}>
    <Room night={shot.night!==false} location={shot.place||"bedroom"} f={f}/>
    <svg viewBox="0 0 1920 1080" width="100%" height="100%" style={{position:"absolute"}}>
-    {shot.partner&&<Character x={1450} y={720} s={.9} shirt="#536b78" pose={shot.partnerPose||"idle"} f={f}/>}
+    {shot.partner&&<Character x={1450} y={720} s={.9} shirt="#536b78" pose={shot.partnerPose||"idle"} f={f} talk={shot.partnerTalk!==false}/>}
     {shot.desk&&<><rect x="180" y="760" width="700" height="24" rx="8" fill="#9b795b"/><path d="M240 784 L225 1080 M820 784 L840 1080" stroke="#463a34" strokeWidth="25"/></>}
     {shot.phone&&<g transform={`translate(${mix(f,[0,35,80,119],[phoneX,phoneX+8,phoneX-8,phoneX])} 0)`}><Phone x={0} y={shot.phoneY||720} scale={shot.phoneScale||1} tilt={shot.phoneTilt||0} glow={Math.max(0,Math.sin(f*.3))}/></g>}
-    {shot.person!==false&&<Character x={charX} y={py} s={shot.scale||1.18} pose={pose} f={f}/>}
+    {shot.person!==false&&<Character x={charX} y={py} s={shot.scale||1.18} pose={pose} f={f} talk={!!shot.talk}/>}
     {shot.bubble&&<g opacity={interpolate(f,[10,24,92,110],[0,1,1,0],clamp)}><rect x="990" y="240" width="330" height="115" rx="28" fill="#f5eee2"/><path d="M1050 355 L1020 400 L1110 355" fill="#f5eee2"/><text x="1155" y="310" textAnchor="middle" fontSize="31" fontFamily="Arial" fill="#243447">{shot.bubble}</text></g>}
     {shot.motionLine&&<path d="M1080 520 Q1200 450 1320 520" stroke="#f0c77f" strokeWidth="7" strokeDasharray="10 15" fill="none" opacity={.7}/>}
    </svg>
@@ -75,16 +75,16 @@ function Shot({shot}){
  </AbsoluteFill>;
 }
 const shots=[
- {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"wave",partner:true,bubble:"So... anyway.",caption:"A tiny awkward moment happens."},
- {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"turn",partner:true,partnerPose:"turn",caption:"You notice a strange pause."},
- {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"think",partner:true,partnerPose:"walk",caption:"The other person moves on."},
+ {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"wave",talk:true,partner:true,partnerTalk:true,bubble:"So... anyway.",caption:"A tiny awkward moment happens."},
+ {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"turn",talk:true,partner:true,partnerTalk:true,partnerPose:"turn",caption:"You notice a strange pause."},
+ {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"think",talk:true,partner:true,partnerTalk:false,partnerPose:"walk",caption:"The other person moves on."},
  {place:"hall",night:false,px:mix(0,[0,119],[760,980]),py:730,scale:1.1,pose:"walk",walk:[760,980],caption:"But your mind keeps the moment."},
  {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"sit",desk:true,caption:"Hours later, it comes back."},
- {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"think",desk:true,bubble:"Why did I say that?",caption:"You replay what you should have said."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"think",talk:true,desk:true,bubble:"Why did I say that?",caption:"You replay what you should have said."},
  {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"reach",desk:true,phone:true,phoneX:1120,caption:"Then you reach for your phone."},
  {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"phone",desk:true,phone:true,phoneX:1010,phoneY:650,caption:"You check the conversation again."},
  {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"turn",desk:true,phone:true,phoneX:1010,phoneY:650,motionLine:true,caption:"Your attention feeds the loop."},
- {place:"hall",night:true,px:950,py:730,scale:1.22,pose:"walk",walk:[1100,900],caption:"Your brain is scanning for social threats."},
+ {place:"hall",night:true,px:950,py:730,scale:1.22,pose:"walk",talk:true,walk:[1100,900],caption:"Your brain is scanning for social threats."},
  {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"think",desk:true,caption:"But replaying is not protection."},
  {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"reach",desk:true,phone:true,phoneX:1030,phoneY:720,caption:"Name the thought. Don't argue with it."},
  {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"idle",desk:true,phone:true,phoneX:1270,phoneY:790,phoneTilt:24,caption:"Keep the lesson. Let the rest pass."},
