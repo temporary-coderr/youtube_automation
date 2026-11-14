@@ -71,10 +71,22 @@ jobs:
       - name: Type-check the pinned renderer
         working-directory: ara
         run: npm run typecheck
+      - name: Prepare and smoke-test headless Chrome
+        env:
+          CHROME_REAL: ${{ steps.chrome.outputs.chrome-path }}
+        run: |
+          set -euo pipefail
+          cat > ara/chrome-ci <<'SH'
+          #!/usr/bin/env bash
+          exec "$CHROME_REAL" --no-sandbox --disable-dev-shm-usage "$@"
+          SH
+          chmod +x ara/chrome-ci
+          echo "CHROME_REAL=$CHROME_REAL" >> "$GITHUB_ENV"
+          "$CHROME_REAL" --headless=new --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --dump-dom about:blank
       - name: Render a real two-character 3D film in headless Chrome
         working-directory: ara
         env:
-          CHROME: ${{ steps.chrome.outputs.chrome-path }}
+          CHROME: ${{ github.workspace }}/ara/chrome-ci
         run: npm run test:studio -- --example
       - name: Mix narration and original ambience into the film
         working-directory: ara
