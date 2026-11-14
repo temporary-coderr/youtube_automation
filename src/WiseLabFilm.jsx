@@ -71,15 +71,15 @@ function DawnScene(){
 }
 const scenes = [
  {start:0, Component:WindowScene, title:"WHY YOUR BRAIN REPLAYS", sub:"THE MOMENTS YOU REGRET", caption:"Ever replay a tiny awkward moment for hours?"},
- {start:270, Component:HallScene, title:"YOUR BRAIN IS SCANNING", sub:"FOR SOCIAL THREATS", caption:"Your brain treats social mistakes like signals worth studying."},
- {start:540, Component:PhoneScene, title:"THE LOOP FEELS URGENT", sub:"BUT IT ISN'T DANGER", caption:"The memory feels important because your attention keeps returning to it."},
- {start:810, Component:DawnScene, title:"NOTICE IT. THEN RELEASE IT.", sub:"YOU ARE NOT THAT MOMENT.", caption:"Name the thought, learn what you can, and return to the present."}
+ {start:450, Component:HallScene, title:"YOUR BRAIN IS SCANNING", sub:"FOR SOCIAL THREATS", caption:"Your brain treats social mistakes like signals worth studying."},
+ {start:900, Component:PhoneScene, title:"THE LOOP FEELS URGENT", sub:"BUT IT ISN'T DANGER", caption:"The memory feels important because your attention keeps returning to it."},
+ {start:1350, Component:DawnScene, title:"NOTICE IT. THEN RELEASE IT.", sub:"YOU ARE NOT THAT MOMENT.", caption:"Name the thought, learn what you can, and return to the present."}
 ];
 function Scene({item}){
  const frame=useCurrentFrame(); const local=frame-item.start;
- const zoom=interpolate(local,[0,269],[1.04,1.14],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
+ const zoom=interpolate(local,[0,449],[1.04,1.14],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
  const pan=interpolate(local,[0,269],[-16,18],{extrapolateRight:"clamp"});
- const fade=interpolate(local,[0,16,250,269],[0,1,1,0],{extrapolateRight:"clamp"});
+ const fade=interpolate(local,[0,24,425,449],[0,1,1,0],{extrapolateRight:"clamp"});
  return <AbsoluteFill style={{opacity:fade,background:C.ink}}>
   <AbsoluteFill style={{transform:`translateX(${pan}px) scale(${zoom})`}}><item.Component/></AbsoluteFill>
   <div style={{position:"absolute",top:95,left:130,right:130,opacity:interpolate(local,[0,35],[0,1],{extrapolateRight:"clamp"})}}>
@@ -94,7 +94,7 @@ export const WiseLabFilm = () => {
  const frame=useCurrentFrame();
  const opening=interpolate(frame,[0,35],[0,1],{extrapolateRight:"clamp"});
  return <AbsoluteFill style={{background:C.ink}}>
-  {scenes.map((item,i)=><Sequence key={i} from={item.start} durationInFrames={270}><Scene item={item}/></Sequence>)}
+  {scenes.map((item,i)=><Sequence key={i} from={item.start} durationInFrames={450}><Scene item={item}/></Sequence>)}
   <Sequence from={0} durationInFrames={1080}><Audio src={staticFile("narration.mp3")} volume={0.92}/></Sequence>
   <div style={{position:"absolute",right:90,bottom:32,fontFamily:"Arial",fontSize:20,letterSpacing:5,color:"#f5eee0",opacity:.7}}>WISE-LAB</div>
  </AbsoluteFill>
