@@ -1,4 +1,4 @@
-name: WISE-LAB Animation Integration Benchmark
+name: WISE-LAB Integrated Rig Video
 
 on:
   push:
@@ -10,46 +10,43 @@ permissions:
   contents: read
 
 concurrency:
-  group: wise-lab-animation-${{ github.ref }}
+  group: wise-lab-integrated-rig-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  render-and-verify:
+  render-integrated-video:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install render dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg espeak-ng
-          python -m pip install --upgrade pip Pillow
-      - name: Compile Python prototypes
+      - name: Install Python renderer dependencies
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          files = list(Path('experiments/2026-11-14').glob('*.py')) + list(Path('renderer').glob('*.py'))
-          for path in files:
-              compile(path.read_text(encoding='utf-8'), str(path), 'exec')
-              print('PASS', path)
-          PY
-      - name: Render 20-second animation sample
-        run: python experiments/2026-11-14/production_character_benchmark.py
-      - name: Verify MP4 streams and duration
-        run: python renderer/verify_render.py renders/wise-lab-production-character-20sec.mp4
+          python -m pip install --upgrade pip
+          python -m pip install Pillow playwright
+          python -m playwright install --with-deps chromium
+      - name: Compile renderer
+        run: python -m py_compile renderer/render_integrated.py renderer/verify_render.py
+      - name: Render actual articulated Canvas rig to MP4
+        run: python renderer/render_integrated.py
+      - name: Verify integrated MP4
+        run: python renderer/verify_render.py renders/integrated/wise-lab-integrated-rig-12sec.mp4
       - name: Save render metadata
         if: always()
         run: |
-          mkdir -p renders
-          ffprobe -v error -show_format -show_streams -of json renders/wise-lab-production-character-20sec.mp4 > renders/ffprobe-report.json || true
-      - name: Upload animation benchmark
+          mkdir -p renders/integrated
+          ffprobe -v error -show_format -show_streams -of json renders/integrated/wise-lab-integrated-rig-12sec.mp4 > renders/integrated/ffprobe-report.json || true
+      - name: Upload actual video
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wise-lab-animation-integration-${{ github.run_number }}
+          name: wise-lab-integrated-rig-video-${{ github.run_number }}
           path: |
-            renders/wise-lab-production-character-20sec.mp4
-            renders/ffprobe-report.json
-          if-no-files-found: warn
+            renders/integrated/wise-lab-integrated-rig-12sec.mp4
+            renders/integrated/ffprobe-report.json
+          if-no-files-found: error
           retention-days: 14
