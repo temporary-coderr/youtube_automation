@@ -138,3 +138,5 @@ for i in range(SECONDS*FPS):
  if (i+1)%48==0: print(f"FRAMES {i+1}/{SECONDS*FPS}",flush=True)
 subprocess.run(["ffmpeg","-y","-framerate",str(FPS),"-i",f"{DIR}/%04d.png","-c:v","libx264","-preset","veryfast","-crf","18","-pix_fmt","yuv420p",OUT],check=True)
 print("DONE",OUT)
+
+# WISE-LAB benchmark rerun: verify articulated movement and prop interaction.

@@ -1,15 +1,16 @@
-name: WISE-LAB Hybrid 7-Second Test
+name: WISE-LAB Hybrid 10-Second Three-Quarter Character Test
 on:
   workflow_dispatch:
   push:
     branches: [feature/cinematic-engine]
     paths:
       - 'prototype/hybrid_character_pass.py'
+      - 'prototype/validate_preview.py'
       - '.github/workflows/hybrid-7sec.yml'
 permissions:
   contents: read
 concurrency:
-  group: wise-hybrid-7sec-${{ github.ref }}
+  group: wise-hybrid-10sec-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   render:
@@ -51,34 +52,41 @@ jobs:
           PY
       - name: Render animated Blender character on transparent frames
         run: |
+          set -euo pipefail
           blender -b -t 4 --python prototype/hybrid_character_pass.py
+          count=$(find renders/character -maxdepth 1 -name 'frame_*.png' | wc -l)
+          test "$count" -eq 240 || { echo "Expected 240 character frames, got $count"; exit 1; }
       - name: Composite illustrated background and Blender character
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from PIL import Image
-          import glob, os
+          import glob
           bg=Image.open('renders/background/bedroom.png').convert('RGBA')
           files=sorted(glob.glob('renders/character/frame_*.png'))
-          assert len(files)==168, f'Expected 168 character frames, got {len(files)}'
+          assert len(files)==240, f'Expected 240 character frames, got {len(files)}'
           for i,p in enumerate(files):
-              fg=Image.open(p).convert('RGBA')
-              # Fit transparent Blender render into the illustrated 2D scene.
-              fg=fg.resize((1280,720),Image.Resampling.LANCZOS)
-              out=Image.alpha_composite(bg,fg).convert('RGB')
-              out.save(f'renders/final/frame_{i+1:04d}.jpg',quality=92)
+              fg=Image.open(p).convert('RGBA').resize((1280,720),Image.Resampling.LANCZOS)
+              Image.alpha_composite(bg,fg).convert('RGB').save(f'renders/final/frame_{i+1:04d}.jpg',quality=92)
           print('COMPOSITED_FRAMES',len(files))
           PY
-          ffmpeg -hide_banner -loglevel error -y -framerate 24 -i renders/final/frame_%04d.jpg -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p renders/wise-lab-hybrid-7sec.mp4
-          ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-hybrid-7sec.mp4 -vf "fps=1,scale=480:-1,tile=4x2" -frames:v 1 renders/wise-lab-hybrid-contact.jpg
-          ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate -of json renders/wise-lab-hybrid-7sec.mp4 > renders/wise-lab-hybrid-report.json
-      - name: Upload preview and source checkpoints
+          ffmpeg -hide_banner -loglevel error -y -framerate 24 -i renders/final/frame_%04d.jpg -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p renders/wise-lab-hybrid-10sec.mp4
+          ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-hybrid-10sec.mp4 -vf "fps=1,scale=480:-1,tile=4x2" -frames:v 1 renders/wise-lab-hybrid-contact.jpg
+          ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate -of json renders/wise-lab-hybrid-10sec.mp4 > renders/wise-lab-hybrid-report.json
+      - name: Validate rendered MP4 quality
+        run: python3 prototype/validate_preview.py renders/wise-lab-hybrid-10sec.mp4 --report renders/wise-lab-quality-report.json
+      - name: Upload preview and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wise-lab-hybrid-7sec-${{ github.run_number }}
+          name: wise-lab-hybrid-10sec-${{ github.run_number }}
           path: |
-            renders/wise-lab-hybrid-7sec.mp4
-          if-no-files-found: error
+            renders/wise-lab-hybrid-10sec.mp4
+            renders/wise-lab-hybrid-contact.jpg
+            renders/wise-lab-hybrid-report.json
+            renders/wise-lab-quality-report.json
+            renders/background/**
+            renders/character/**
+            renders/hybrid-character.blend
+          if-no-files-found: warn
           retention-days: 7
-
-# Trigger hybrid benchmark workflow on this commit.

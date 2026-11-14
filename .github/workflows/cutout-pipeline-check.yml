@@ -1,0 +1,25 @@
+name: WISE-LAB 2D Cutout Pipeline Contract Check
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/cinematic-engine]
+    paths:
+      - 'production/**'
+      - 'prototype/validate_cutout_project.py'
+      - '.github/workflows/cutout-pipeline-check.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate source contracts
+        run: |
+          python -m py_compile prototype/validate_cutout_project.py
+          python -m json.tool production/character-manifest.schema.json >/dev/null
+          grep -q 'No code-drawn human bodies' production/2d-cutout-pipeline.md
+          echo "2D cutout pipeline contract checks passed."

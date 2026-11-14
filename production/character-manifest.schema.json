@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WISE-LAB 2D cutout character manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "display_name", "model_sheet", "rig_file", "layers", "views"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "display_name": {"type": "string", "minLength": 1},
+    "model_sheet": {"type": "string"},
+    "rig_file": {"type": "string"},
+    "layers": {"type": "array", "minItems": 17, "uniqueItems": true, "items": {"type": "string"}},
+    "views": {"type": "array", "uniqueItems": true, "allOf": [{"contains": {"const": "front"}}, {"contains": {"const": "three_quarter"}}, {"contains": {"const": "side"}}]},
+    "notes": {"type": "string"}
+  }
+}
