@@ -412,6 +412,8 @@ function Shot({shot,index}){
     <defs>
       <linearGradient id="filmVignette" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#081019" stopOpacity=".12"/><stop offset=".6" stopColor="#081019" stopOpacity="0"/><stop offset="1" stopColor="#081019" stopOpacity=".42"/></linearGradient>
       <radialGradient id="focusGlow"><stop stopColor="#f4d6a3" stopOpacity=".19"/><stop offset="1" stopColor="#f4d6a3" stopOpacity="0"/></radialGradient>
+      <pattern id="comicDots" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="2.2" fill="#10141b" opacity=".42"/></pattern>
+      <linearGradient id="comicEdge" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#f0c16f"/><stop offset="1" stopColor="#df7958"/></linearGradient>
     </defs>
     <g transform={"translate("+camX+" "+camY+") scale("+z+")"}>
       {shot.place==="cafe"||shot.place==="cafe-alone" ? <CafeSet frame={local}/> :
@@ -449,12 +451,22 @@ function Shot({shot,index}){
     </g>
     <rect width={W} height={H} fill="url(#filmVignette)"/>
     <ellipse cx="980" cy="475" rx="900" ry="540" fill="url(#focusGlow)" opacity=".5"/>
+    {/* Graphic-novel print texture and inked frame */ }
+    <rect width={W} height={H} fill="url(#comicDots)" opacity=".24"/>
+    <path d="M0 0 H1920 V18 H0Z M0 1062 H1920 V1080 H0Z" fill="#10141b"/>
+    <path d="M18 18 H1902 V1062 H18Z" fill="none" stroke="#10141b" strokeWidth="12"/>
+    <path d="M18 18 H430 L380 34 H18Z" fill="url(#comicEdge)"/>
+    {([1,2,6,9,12].includes(index)) && <g opacity=".34" transform={"translate(1580 230) rotate("+((local-55)*.12)+")"}>
+      {Array.from({length:16},(_,i)=><path key={i} d={"M0 -38 L0 -255"} transform={"rotate("+(i*22.5)+")"} stroke="#f1c276" strokeWidth="9"/>)}
+      <circle r="52" fill="#f1c276" opacity=".18"/>
+    </g>}
    </svg>
-   <div style={{position:"absolute",top:61,left:88,fontFamily:"Arial,sans-serif",fontWeight:700,fontSize:20,letterSpacing:5,color:"#e7c18e"}}>WISE-LAB <span style={{color:"#aab7bd",fontWeight:400,letterSpacing:3}}> / {shot.title}</span></div>
-   <div style={{position:"absolute",left:0,right:0,bottom:0,height:202,background:"linear-gradient(180deg,rgba(10,17,25,0),rgba(10,17,25,.72))"}}/>
-   <div style={{position:"absolute",left:230,right:230,bottom:68,textAlign:"center",fontFamily:"Arial,sans-serif",fontSize:36,fontWeight:700,lineHeight:1.2,color:"#fff7e9",letterSpacing:.15,textShadow:"0 3px 12px rgba(0,0,0,.75)"}}>{shot.caption}</div>
-   <div style={{position:"absolute",left:88,right:88,top:28,height:2,background:"rgba(237,224,202,.24)"}}/>
-   <div style={{position:"absolute",left:88,top:28,width:lerp(local,0,119,4,99)+"%",height:2,background:"#e7ba79"}}/>
+   <div style={{position:"absolute",top:52,left:74,padding:"12px 22px 10px",background:"#111923",border:"3px solid #f0c16f",boxShadow:"7px 7px 0 #10141b",transform:"skew(-7deg)",fontFamily:"Arial,sans-serif",fontWeight:900,fontSize:19,letterSpacing:3,color:"#f3c779"}}><span style={{display:"inline-block",transform:"skew(7deg)"}}>WISE-LAB <span style={{color:"#f4ead9",fontWeight:700,letterSpacing:2}}> / {shot.title}</span></span></div>
+   <div style={{position:"absolute",left:0,right:0,bottom:0,height:205,background:"linear-gradient(180deg,rgba(10,17,25,0),rgba(10,17,25,.86))"}}/>
+   <div style={{position:"absolute",left:230,right:230,bottom:54,textAlign:"center",padding:"18px 26px",background:"#f1e6d3",border:"5px solid #111923",boxShadow:"9px 9px 0 rgba(10,15,22,.8)",transform:"skew(-2deg)",fontFamily:"Arial,sans-serif",fontSize:35,fontWeight:900,lineHeight:1.16,color:"#172230",letterSpacing:.1,textShadow:"none"}}>{shot.caption}</div>
+   <div style={{position:"absolute",right:76,top:56,padding:"8px 14px",background:"#d87554",border:"3px solid #111923",color:"#fff4e5",fontFamily:"Arial,sans-serif",fontWeight:900,fontSize:15,letterSpacing:2,transform:"rotate(3deg)"}}>{String(index+1).padStart(2,"0")} / 15</div>
+   <div style={{position:"absolute",left:78,right:78,top:25,height:5,background:"#10141b",border:"1px solid #e9d7b9"}}/>
+   <div style={{position:"absolute",left:78,top:25,width:lerp(local,0,119,4,99)+"%",height:5,background:"#e7ba79"}}/>
    {shot.end && <div style={{position:"absolute",right:100,bottom:28,fontFamily:"Arial,sans-serif",fontSize:18,letterSpacing:6,color:"#f4e9d7",opacity:.8}}>UNDERSTAND YOUR MIND</div>}
  </AbsoluteFill>;
 }
