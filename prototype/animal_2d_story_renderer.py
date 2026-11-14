@@ -22,7 +22,7 @@ import cairosvg
 from PIL import Image
 from io import BytesIO
 
-W, H, FPS, OUTPUT_FPS = 1280, 720, 12, 24
+W, H, FPS, OUTPUT_FPS = 1280, 720, 24, 24
 ROOT = Path("renders/animal-2d")
 ROOT.mkdir(parents=True, exist_ok=True)
 MP4 = ROOT / "wise-lab-fox-and-turtle.mp4"
@@ -72,11 +72,75 @@ def blink(t: float, offset: float = 0.0) -> float:
 
 
 def find_tts() -> str:
-    exe = shutil.which("espeak-ng") or shutil.which("espeak")
+    exe = shutil.which("edge-tts")
     if not exe:
-        raise RuntimeError("Install espeak-ng (or espeak) to create the free offline narration.")
+        raise RuntimeError("edge-tts is required; install it with pip install edge-tts.")
     return exe
 
+
+def srt_time(seconds: float) -> str:
+    ms = int(round(max(0.0, seconds) * 1000))
+    h, rem = divmod(ms, 3_600_000)
+    m, rem = divmod(rem, 60_000)
+    s, ms = divmod(rem, 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+def make_narration() -> tuple[list[float], float]:
+    """Generate natural neural narration, measure each line, and build timed WAV."""
+    exe = find_tts()
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError("ffmpeg is required for neural voice conversion.")
+    temp = ROOT / "voice_parts"
+    shutil.rmtree(temp, ignore_errors=True)
+    temp.mkdir(parents=True, exist_ok=True)
+    parts: list[bytes] = []
+    durations: list[float] = []
+    channels, width, rate = 1, 2, 24000
+    silence_seconds = 0.28
+    silence = b"\\x00" * int(rate * silence_seconds) * channels * width
+    for i, scene in enumerate(STORY):
+        mp3_path = temp / f"line_{i+1:02d}.mp3"
+        wav_path = temp / f"line_{i+1:02d}.wav"
+        cmd = [
+            exe, "--voice", "en-US-AndrewNeural", "--rate=-5%", "--pitch=-1Hz",
+            "--volume=+0%", "--text", scene["caption"], "--write-media", str(mp3_path)
+        ]
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        subprocess.run([
+            ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-i", str(mp3_path),
+            "-ac", "1", "-ar", str(rate), "-c:a", "pcm_s16le", str(wav_path)
+        ], check=True)
+        with wave.open(str(wav_path), "rb") as wf:
+            current = (wf.getnchannels(), wf.getsampwidth(), wf.getframerate())
+            if current != (channels, width, rate):
+                raise RuntimeError(f"Unexpected neural narration WAV format: {current}")
+            frames = wf.readframes(wf.getnframes())
+        duration = len(frames) / (channels * width * rate)
+        if duration <= 0.25:
+            raise RuntimeError(f"Neural narration line {i+1} is unexpectedly short.")
+        parts.append(frames)
+        durations.append(duration)
+        if i < len(STORY) - 1:
+            parts.append(silence)
+            durations[-1] += silence_seconds
+    with wave.open(str(NARRATION), "wb") as out:
+        out.setnchannels(channels)
+        out.setsampwidth(width)
+        out.setframerate(rate)
+        out.writeframes(b"".join(parts))
+    start = 0.0
+    cues = []
+    for i, (scene, duration) in enumerate(zip(STORY, durations)):
+        spoken_end = start + duration - (silence_seconds if i < len(STORY) - 1 else 0.0)
+        cues.extend([str(i + 1), f"{srt_time(start)} --> {srt_time(spoken_end)}", scene["caption"], ""])
+        start += duration
+    SRT.write_text("\n".join(cues), encoding="utf-8")
+    total = sum(durations)
+    (ROOT / "narration.txt").write_text("\n".join(s["caption"] for s in STORY), encoding="utf-8")
+    print(f"Natural neural narration: en-US-AndrewNeural, -5% rate, {total:.2f}s", flush=True)
+    return durations, total
 
 def srt_time(seconds: float) -> str:
     ms = int(round(max(0.0, seconds) * 1000))
@@ -179,7 +243,7 @@ def fox_svg(x: float, ground: float, t: float, scene: int, u: float) -> str:
     elif scene in (3, 4):
         root_x = 625; stride = 0.0
     else:
-        root_x = mix(625, 400, ease(u)); stride = 0.85
+        root_x = 390; stride = 0.0
     phase = t * 7.8
     bob = abs(math.sin(phase)) * 5.0 * stride
     tail = 8 * math.sin(t * 3.8) + (7 if scene == 1 else 0)
@@ -251,10 +315,10 @@ def turtle_svg(x: float, ground: float, t: float, scene: int, u: float) -> str:
         root_x = 1065
         walk = 0.12 if scene == 1 else 0.0
     elif scene == 4:
-        root_x = mix(1065, 745, ease(u))
+        root_x = mix(1065, 850, ease(u))
         walk = 1.0
     else:
-        root_x = 745
+        root_x = 850
         walk = 0.10
     phase = t * 8.4
     bob = abs(math.sin(phase)) * 3.2 * walk
@@ -419,7 +483,7 @@ def render() -> dict:
         ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
         "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "pipe:0",
         "-i", str(NARRATION), "-i", str(AMBIENCE),
-        "-filter_complex", f"[1:a]volume=1.0[voice];[2:a]volume=0.18[bed];[voice][bed]amix=inputs=2:duration=first:normalize=0,apad,atrim=0:{total:.4f},afade=t=out:st={max(0,total-1.2):.4f}:d=1.2[a]",
+        "-filter_complex", f"[1:a]highpass=f=85,lowpass=f=11500,acompressor=threshold=0.10:ratio=2.2:attack=15:release=180,loudnorm=I=-16:TP=-1.5:LRA=10,volume=1.0[voice];[2:a]volume=0.10[bed];[voice][bed]amix=inputs=2:duration=first:normalize=0,apad,atrim=0:{total:.4f},afade=t=out:st={max(0,total-1.2):.4f}:d=1.2[a]",
         "-vf", f"fps={OUTPUT_FPS}",
         "-map", "0:v:0", "-map", "[a]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
         "-pix_fmt", "yuv420p", "-r", str(OUTPUT_FPS), "-c:a", "aac", "-b:a", "160k", "-t", f"{total:.4f}",
@@ -463,7 +527,7 @@ def render() -> dict:
         "resolution": f"{W}x{H}", "fps": OUTPUT_FPS, "render_source_fps": FPS, "duration_seconds": round(total, 3),
         "rendered_source_frames": frame_count, "frames": int(round(total * OUTPUT_FPS)), "scenes": len(STORY), "camera_track": "six continuous pan/zoom beats",
         "animation": ["quadruped walk cycles", "tail swish", "ear twitch", "blinks", "head turns", "paw/log interaction", "turtle crossing", "moving stream and fireflies"],
-        "audio": "offline English narration + procedural forest ambience and effects",
+        "audio": "Microsoft Edge neural en-US-AndrewNeural narration + procedural forest ambience and effects",
         "subtitle_file": str(SRT), "mp4": str(MP4),
     }
     with wave.open(str(NARRATION), "rb") as wf:
