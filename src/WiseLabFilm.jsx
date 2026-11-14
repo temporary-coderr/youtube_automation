@@ -20,7 +20,9 @@ function Character({x=960,y=670,s=1,pose="idle",f=0,shirt=C.hood,skin=C.skin,tal
  const arm=pose==="phone"?-62:pose==="reach"?-82:pose==="wave"?-112:pose==="think"?-35:pose==="walk"?walk*28:0;
  const other=pose==="walk"?-walk*28:pose==="think"?-48:pose==="phone"?18:0;
  const leg=pose==="walk"?walk*27:pose==="sit"?-14:0;
- const headTurn=pose==="turn"?mix(f,[0,35,90,119],[0,18,18,0]):pose==="phone"?12:0;\n const blink=(f%91)>86 || (f%137)>132;\n const mouthOpen=talk && Math.sin(f*.62)>0.05;
+ const headTurn=pose==="turn"?mix(f,[0,35,90,119],[0,18,18,0]):pose==="phone"?12:0;
+  const blink=(f%91)>86 || (f%137)>132;
+  const mouthOpen=talk && Math.sin(f*.62)>0.05;
  return <g transform={`translate(${x} ${y+bob}) scale(${s})`}>
   <ellipse cx="0" cy="12" rx="115" ry="18" fill="#070d16" opacity=".34"/>
   <g transform="translate(-38 -8) rotate(${leg} 0 0)"><path d="M-26 -5 L-34 140 L-24 210 L12 210 L5 130 L18 4Z" fill="#151e2c"/><path d="M-30 194 L14 194 L25 214 L-42 214Z" fill="#0b111b"/></g>
