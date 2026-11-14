@@ -16,12 +16,13 @@ The repository currently has a rig-map example but **does not yet contain an app
 Prepare the artwork in Krita or another layered illustration editor. Export as OpenRaster with transparent, overlapping limb segments at joints. A flattened PNG is not sufficient.
 
 ## Run
-\`\`\`bash
-blender --background --python production/ora_cutout_renderer.py -- \\
-  --ora assets/characters/wise-lab-main/character-scene.ora \\
-  --rig prototype/illustrated_2d/rig-map.example.json \\
+
+```bash
+blender --background --python production/ora_cutout_renderer.py -- \
+  --ora assets/characters/wise-lab-main/character-scene.ora \
+  --rig prototype/illustrated_2d/rig-map.example.json \
   --out renders/preview.mp4 --duration 10 --fps 24 --width 1280 --height 720
-\`\`\`
+```
 
 Or run **Illustrated 2D Cutout Preview** from GitHub Actions and supply the .ora and rig-map paths.
 
