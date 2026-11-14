@@ -1,0 +1,52 @@
+name: Render cricket animation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "package.json"
+      - ".github/workflows/render-cricket.yml"
+  push:
+    branches:
+      - feat/cricket-storybook-short
+    paths:
+      - "src/**"
+      - "package.json"
+      - ".github/workflows/render-cricket.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    name: Render 30-second cricket story
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Ensure Remotion browser
+        run: npx remotion browser ensure
+
+      - name: Render MP4
+        run: npm run render:cricket
+
+      - name: Upload rendered video
+        uses: actions/upload-artifact@v4
+        with:
+          name: cricket-storybook-30s
+          path: out/cricket-storybook-30s.mp4
+          if-no-files-found: error
+          retention-days: 14
