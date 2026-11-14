@@ -25,7 +25,7 @@ function character(x,ground,t,mode,phase,phoneHeld){
  const walk=mode==='walk',reach=mode==='reach',settle=mode==='settle';
  const cycle=phase*TAU, stride=walk?Math.sin(cycle):0;
  const rootBob=walk?Math.abs(Math.sin(cycle))*5:0;
- const pelvis={x:0,y:-310+rootBob};
+ const pelvis={x:0,y:ground-310+rootBob};
  const torsoLean=reach?-.13*phase:walk?-.025*stride:0;
  const shoulder={x:pelvis.x+Math.sin(t*1.7)*2,y:pelvis.y-145};
  const head={x:shoulder.x+Math.sin(t*1.7)*2,y:shoulder.y-78};
@@ -35,7 +35,7 @@ function character(x,ground,t,mode,phase,phoneHeld){
  function foot(side){if(!walk)return{x:side*39,y:ground-8};let isSwing=(side<0?u<.5:u>=.5);let localU=side<0?u*2:(u-.5)*2;localU=clamp(localU,0,1);let anchor=side<0?-68:68;let sx=anchor+(side<0?step%2:-(step%2))*112; if(!isSwing)return{x:sx,y:ground-8};return{x:mix(sx-56,sx+56,ease(localU)),y:ground-8-Math.sin(localU*Math.PI)*46};}
  const lf=foot(-1),rf=foot(1);
  const hipL={x:-36,y:pelvis.y+8},hipR={x:36,y:pelvis.y+8};
- const kneeL=solve(hipL,lf,118,120,1),kneeR=solve(hipR,rf,118,120,-1);
+ const kneeL=solve(hipL,lf,154,154,1),kneeR=solve(hipR,rf,154,154,-1);
  // shoes under legs
  limb(hipL,kneeL,lf,42,34,'#202d40');limb(hipR,kneeR,rf,42,34,'#26364b');
  round(lf.x-43,lf.y-11,78,25,11,'#101a29');round(rf.x-43,rf.y-11,78,25,11,'#101a29');
