@@ -1,0 +1,144 @@
+name: WISE-LAB Real 3D Story Pilot
+on:
+  push:
+    branches: [wise-lab-real3d-pilot]
+    paths:
+      - "production/**"
+      - "scripts/**"
+      - ".github/workflows/wise-lab-real3d-pilot.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ara-wiselab-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Ara 3D Gen renderer
+        uses: actions/checkout@v4
+        with:
+          repository: olatunde85/3d-gen
+          ref: 215c38590e5330330a98a34ad214bffff457e716
+          path: ara
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ara/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+        with:
+          chrome-version: stable
+      - name: Install FFmpeg and speech fallback
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg espeak-ng fonts-liberation
+      - name: Cache MakeHuman CC0 assets
+        uses: actions/cache@v4
+        with:
+          path: |
+            ara/vendor
+            ara/public/assets
+          key: ara-assets-${{ runner.os }}-215c38590e5330330a98a34ad214bffff457e716
+      - name: Install renderer dependencies
+        working-directory: ara
+        run: npm ci
+      - name: Download and build the character asset library
+        working-directory: ara
+        run: npm run setup-assets
+      - name: Prepare WISE-LAB story and free narration
+        run: |
+          set -euo pipefail
+          cp production/ara-studio-capture.ts ara/scripts/studio-example-capture.ts
+          cp scripts/generate_narration.py ara/scripts/generate_narration.py
+          cp scripts/wiselab-pilot-narration.txt ara/scripts/narration.txt
+          cp scripts/make_ambience.py ara/scripts/make_ambience.py
+          python -m pip install --disable-pip-version-check --no-cache-dir edge-tts
+          cd ara
+          python scripts/generate_narration.py
+          python scripts/make_ambience.py
+          test -s public/narration.mp3
+          test -s public/captions.srt
+          test -s public/ambience.wav
+      - name: Type-check the pinned renderer
+        working-directory: ara
+        run: npm run typecheck
+      - name: Render a real two-character 3D film in headless Chrome
+        working-directory: ara
+        env:
+          CHROME: ${{ steps.chrome.outputs.chrome-path }}
+        run: npm run test:studio -- --example
+      - name: Mix narration and original ambience into the film
+        working-directory: ara
+        run: |
+          set -euo pipefail
+          test -s out/studio-expansion/wise-lab-3d-pilot-silent.mp4
+          mkdir -p out/wise-lab-final
+          ffmpeg -hide_banner -loglevel error -y \
+            -i out/studio-expansion/wise-lab-3d-pilot-silent.mp4 \
+            -i public/narration.mp3 \
+            -i public/ambience.wav \
+            -filter_complex "[1:a]volume=1.0[voice];[2:a]volume=0.14,atrim=0:15[bed];[voice][bed]amix=inputs=2:duration=longest:normalize=0,apad=pad_dur=2,atrim=0:15,afade=t=out:st=13:d=2[a]" \
+            -map 0:v:0 -map "[a]" \
+            -c:v copy -c:a aac -b:a 192k -t 15 \
+            -movflags +faststart out/wise-lab-final/wise-lab-3d-pilot.mp4
+          ffmpeg -hide_banner -loglevel error -y \
+            -i out/wise-lab-final/wise-lab-3d-pilot.mp4 \
+            -vf "fps=1,scale=480:-1,tile=5x3" \
+            -frames:v 1 out/wise-lab-final/contact-sheet.jpg
+          cp public/captions.srt out/wise-lab-final/captions.srt
+          cp out/studio-expansion/wise-lab-3d-pilot-render.json out/wise-lab-final/render-info.json
+      - name: Validate final MP4 and subtitle timing
+        working-directory: ara
+        run: |
+          set -euo pipefail
+          test -s out/wise-lab-final/wise-lab-3d-pilot.mp4
+          test -s out/wise-lab-final/captions.srt
+          ffprobe -v error \
+            -show_entries format=duration,size \
+            -show_entries stream=codec_type,codec_name,width,height \
+            -of json out/wise-lab-final/wise-lab-3d-pilot.mp4 | tee out/wise-lab-final/ffprobe.json
+          python - <<'PY'
+          import json, re, subprocess
+          from pathlib import Path
+          video = Path("out/wise-lab-final/wise-lab-3d-pilot.mp4")
+          meta = json.loads(subprocess.check_output([
+              "ffprobe", "-v", "error", "-show_entries",
+              "format=duration", "-show_entries",
+              "stream=codec_type,codec_name,width,height", "-of", "json", str(video)
+          ], text=True))
+          duration = float(meta["format"]["duration"])
+          streams = meta["streams"]
+          v = next(s for s in streams if s["codec_type"] == "video")
+          a = next(s for s in streams if s["codec_type"] == "audio")
+          assert abs(duration - 15) <= 0.15, f"unexpected duration: {duration}"
+          assert v["codec_name"] == "h264" and v["width"] >= 1280 and v["height"] >= 720, v
+          assert a["codec_name"] == "aac", a
+          srt = Path("out/wise-lab-final/captions.srt").read_text(encoding="utf-8")
+          cues = re.findall(r"(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})", srt)
+          assert cues, "SRT has no timed captions"
+          def sec(t):
+              h,m,rest=t.split(":"); s,ms=rest.split(",")
+              return int(h)*3600+int(m)*60+int(s)+int(ms)/1000
+          assert all(sec(start) < sec(end) <= duration + .1 for start,end in cues), "SRT timing exceeds the MP4"
+          print(f"VALIDATED: {duration:.2f}s H.264 {v['width']}x{v['height']} + AAC; {len(cues)} timed SRT cues")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-real-3d-pilot
+          path: |
+            ara/out/wise-lab-final/wise-lab-3d-pilot.mp4
+            ara/out/wise-lab-final/contact-sheet.jpg
+            ara/out/wise-lab-final/captions.srt
+            ara/out/wise-lab-final/render-info.json
+            ara/out/wise-lab-final/ffprobe.json
+          if-no-files-found: error
+          retention-days: 14
