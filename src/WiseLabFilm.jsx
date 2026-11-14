@@ -1,105 +1,96 @@
 import React from "react";
 import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile, Easing} from "remotion";
 
-const C = {ink:"#111827",cream:"#f4eee5",gold:"#e7b35d",blue:"#243b55",teal:"#3d7775",skin:"#bd8060",hood:"#263449"};
-const Caption = ({children}) => <div style={{position:"absolute",bottom:76,left:180,right:180,textAlign:"center",fontFamily:"Arial,sans-serif",fontSize:43,fontWeight:700,color:"white",textShadow:"0 3px 18px #000, 0 1px 4px #000",letterSpacing:.2}}>{children}</div>;
-const Grain = () => <div style={{position:"absolute",inset:0,opacity:.12,pointerEvents:"none",backgroundImage:"radial-gradient(#fff 0.55px, transparent 0.8px)",backgroundSize:"5px 5px",mixBlendMode:"soft-light"}}/>;
-function Person({x=900,y=570,scale=1,turn=0}) {
- return <g transform={`translate(${x} ${y}) scale(${scale}) rotate(${turn})`}>
-  <ellipse cx="0" cy="340" rx="150" ry="24" fill="#101827" opacity=".35"/>
-  <path d="M-82 175 Q-130 260 -105 330 L-35 330 L-12 225 L15 330 L88 330 Q105 260 70 170Z" fill="#151f30"/>
-  <path d="M-92 80 Q-150 115 -126 220 L-74 245 L-38 150 L40 150 L75 245 L128 218 Q143 125 82 78Z" fill={C.hood}/>
-  <path d="M-38 85 Q-58 145 -42 195 L0 215 L42 195 Q57 145 38 85Z" fill="#1a2639"/>
-  <path d="M-47 -25 Q-56 -110 8 -115 Q76 -105 59 -10 L45 55 Q20 88 -20 70 Q-52 45 -47 -25Z" fill={C.skin}/>
-  <path d="M-57 -42 Q-82 -117 -23 -143 Q39 -172 70 -119 Q100 -89 58 -60 L34 -85 Q2 -54 -18 -72 L-42 -45Z" fill="#171a20"/>
-  <path d="M-42 -8 Q-30 -15 -20 -8 M18 -8 Q30 -15 40 -8" stroke="#30201c" strokeWidth="5" fill="none" strokeLinecap="round"/>
-  <path d="M-12 27 Q2 34 17 25" stroke="#6c3e35" strokeWidth="4" fill="none" strokeLinecap="round"/>
-  <path d="M-86 100 Q0 68 87 100" stroke="#40516a" strokeWidth="12" fill="none"/>
- </g>
+/*
+ * WISE-LAB continuous-story proof:
+ * 15 connected 4-second shots. Reusable cut-out character rig, animated limbs,
+ * prop interactions, motivated camera reframes and match-cut transitions.
+ * No paid APIs, external image services, stock footage or runtime model calls.
+ */
+const C={ink:"#101827",cream:"#f5eee2",gold:"#e7b35d",skin:"#bd8060",hood:"#29394d",dark:"#172334"};
+const ease=Easing.inOut(Easing.cubic);
+const clamp={extrapolateLeft:"clamp",extrapolateRight:"clamp"};
+const mix=(f,points,values)=>interpolate(f,points,values,{...clamp,easing:ease});
+const Caption=({children})=><div style={{position:"absolute",left:150,right:150,bottom:72,textAlign:"center",font:"700 39px Arial",letterSpacing:.2,color:"#fff",textShadow:"0 3px 16px #000,0 1px 4px #000"}}>{children}</div>;
+const Grain=()=> <div style={{position:"absolute",inset:0,pointerEvents:"none",opacity:.075,backgroundImage:"radial-gradient(#fff .6px,transparent .9px)",backgroundSize:"5px 5px"}}/>;
+
+function Character({x=960,y=670,s=1,pose="idle",f=0,shirt=C.hood,skin=C.skin}){
+ const walk=Math.sin(f*.19), bob=pose==="walk"?Math.abs(walk)*10:Math.sin(f*.07)*2;
+ const reach=pose==="reach"||pose==="phone"||pose==="wave";
+ const arm=pose==="phone"?-62:pose==="reach"?-82:pose==="wave"?-112:pose==="think"?-35:pose==="walk"?walk*28:0;
+ const other=pose==="walk"?-walk*28:pose==="think"?-48:pose==="phone"?18:0;
+ const leg=pose==="walk"?walk*27:pose==="sit"?-14:0;
+ const headTurn=pose==="turn"?mix(f,[0,35,90,119],[0,18,18,0]):pose==="phone"?12:0;
+ return <g transform={`translate(${x} ${y+bob}) scale(${s})`}>
+  <ellipse cx="0" cy="12" rx="115" ry="18" fill="#070d16" opacity=".34"/>
+  <g transform="translate(-38 -8) rotate(${leg} 0 0)"><path d="M-26 -5 L-34 140 L-24 210 L12 210 L5 130 L18 4Z" fill="#151e2c"/><path d="M-30 194 L14 194 L25 214 L-42 214Z" fill="#0b111b"/></g>
+  <g transform="translate(38 -8) rotate(${-leg} 0 0)"><path d="M-18 4 L-5 130 L-12 210 L27 210 L36 140 L26 -5Z" fill="#1b2636"/><path d="M-17 194 L29 194 L43 214 L-24 214Z" fill="#0b111b"/></g>
+  <path d="M-65 -160 Q-115 -145 -112 -55 L-93 12 Q0 38 93 12 L112 -55 Q115 -145 65 -160Z" fill={shirt}/>
+  <path d="M-54 -145 Q0 -112 54 -145" stroke="#53657a" strokeWidth="9" fill="none"/>
+  <g transform={`translate(-82 -128) rotate(${arm} 0 0)`}><path d="M0 0 Q-34 32 -27 86 L-12 126" stroke={shirt} strokeWidth="35" fill="none" strokeLinecap="round"/><path d="M-12 119 Q-18 143 0 151" stroke={skin} strokeWidth="23" fill="none" strokeLinecap="round"/></g>
+  <g transform={`translate(82 -128) rotate(${other} 0 0)`}><path d="M0 0 Q34 32 27 86 L12 126" stroke={shirt} strokeWidth="35" fill="none" strokeLinecap="round"/><path d="M12 119 Q18 143 0 151" stroke={skin} strokeWidth="23" fill="none" strokeLinecap="round"/></g>
+  <g transform={`translate(0 -204) rotate(${headTurn})`}>
+   <path d="M-53 -24 Q-65 -110 0 -118 Q68 -111 57 -20 L43 35 Q20 72 -18 57 Q-54 32 -53 -24Z" fill={skin}/>
+   <path d="M-61 -47 Q-86 -120 -22 -148 Q34 -176 69 -128 Q95 -94 58 -62 L34 -91 Q4 -55 -19 -76 L-44 -46Z" fill="#171a20"/>
+   <path d="M-37 -10 Q-26 -17 -16 -10 M16 -10 Q28 -17 38 -10" stroke="#30201c" strokeWidth="5" fill="none" strokeLinecap="round"/>
+   <path d="M-10 26 Q2 32 15 25" stroke="#6c3e35" strokeWidth="4" fill="none" strokeLinecap="round"/>
+  </g>
+ </g>;
 }
-function WindowScene(){
+function Room({night=true,location="bedroom",f=0}){
+ const outside=night?"#263d58":"#8bb3bd";
  return <svg viewBox="0 0 1920 1080" width="100%" height="100%" style={{position:"absolute"}}>
-  <defs><linearGradient id="night" x2="0" y2="1"><stop stopColor="#101b34"/><stop offset="1" stopColor="#38536b"/></linearGradient><linearGradient id="lamp" x2="0" y2="1"><stop stopColor="#f5c77c" stopOpacity=".8"/><stop offset="1" stopColor="#f5c77c" stopOpacity="0"/></linearGradient></defs>
-  <rect width="1920" height="1080" fill="#172235"/><rect x="0" y="0" width="1920" height="720" fill="url(#night)"/>
-  {Array.from({length:28},(_,i)=><circle key={i} cx={(i*173+51)%1920} cy={(i*83+29)%600} r={i%3+1} fill="#e6d8b7" opacity=".55"/>)}
-  <rect x="1190" y="105" width="560" height="550" rx="12" fill="#0c1424" stroke="#65758b" strokeWidth="22"/>
-  <rect x="1220" y="135" width="500" height="490" fill="#253c57"/>
-  <path d="M1220 500 L1370 330 L1460 425 L1580 270 L1720 445 L1720 625 L1220 625Z" fill="#182c43"/>
-  <path d="M1220 560 L1370 455 L1510 535 L1640 405 L1720 485 L1720 625 L1220 625Z" fill="#314e64"/>
-  {Array.from({length:8},(_,i)=><rect key={i} x={1250+i*58} y={180+(i%3)*80} width="15" height="22" fill="#f6c77a" opacity=".55"/>)}
-  <rect y="720" width="1920" height="360" fill="#403c3b"/>
-  <path d="M0 750 Q600 690 1150 755 L1920 720 L1920 1080 L0 1080Z" fill="#66564b"/>
-  <rect x="180" y="770" width="770" height="28" rx="10" fill="#8b6b50"/><path d="M250 798 L230 1040 M890 798 L910 1040" stroke="#322e31" strokeWidth="28"/>
-  <rect x="500" y="690" width="310" height="18" rx="5" fill="#d0b18b"/><rect x="530" y="590" width="250" height="105" rx="8" fill="#172333" stroke="#b99c7d" strokeWidth="9"/><rect x="550" y="608" width="210" height="72" fill="#6b94a1"/>
-  <Person x={1050} y={500} scale={1.15}/>
-  <path d="M1000 850 Q1080 820 1150 850" stroke="#d8a96c" strokeWidth="8" fill="none" opacity=".5"/>
- </svg>
+  <defs><linearGradient id="wall" x2="0" y2="1"><stop stopColor={night?"#18273b":"#d6c4a9"}/><stop offset="1" stopColor={night?"#35495a":"#a98e75"}/></linearGradient></defs>
+  <rect width="1920" height="1080" fill="url(#wall)"/>
+  {location==="bedroom"&&<><rect x="1190" y="100" width="470" height="470" rx="8" fill="#0c1524" stroke="#927d69" strokeWidth="24"/><rect x="1215" y="125" width="420" height="420" fill={outside}/><circle cx={mix(f,[0,119],[1450,1480])} cy="250" r="62" fill={night?"#f2d8a3":"#f4d28a"}/><path d="M1215 450 L1360 310 L1470 420 L1560 280 L1635 390 L1635 545 L1215 545Z" fill="#24394c"/><rect x="0" y="770" width="1920" height="310" fill="#55483f"/><rect x="180" y="750" width="930" height="34" rx="8" fill="#9a7858"/><path d="M250 784 L230 1080 M1040 784 L1070 1080" stroke="#302b2b" strokeWidth="30"/></>}
+  {location==="cafe"&&<><rect y="790" width="1920" height="290" fill="#4c3b34"/><rect x="150" y="130" width="560" height="470" fill="#385568" stroke="#c39d74" strokeWidth="18"/><path d="M150 430 L710 430" stroke="#c39d74" strokeWidth="12"/><circle cx="330" cy="270" r="5" fill="#f7d79b"/><rect x="1120" y="670" width="620" height="24" fill="#9d7958"/><path d="M1180 694 L1160 930 M1680 694 L1700 930" stroke="#594536" strokeWidth="24"/><circle cx="1500" cy="480" r="95" fill="#27394b"/><path d="M1410 560 Q1500 500 1590 560 L1620 690 L1380 690Z" fill="#687b78"/></>}
+  {location==="hall"&&<><path d="M0 0 L650 0 L920 1080 L0 1080Z" fill="#344c5d"/><path d="M1920 0 L1270 0 L1000 1080 L1920 1080Z" fill="#263b4d"/><path d="M0 850 L1920 850 L1920 1080 L0 1080Z" fill="#28313a"/>{Array.from({length:6},(_,i)=><g key={i}><rect x={i*340+70} y="150" width="160" height="430" fill="#d3a67a" opacity=".12"/><circle cx={i*340+150} cy="140" r="24" fill="#f3c87d"/></g>)}</>}
+  {location==="park"&&<><circle cx="1480" cy="250" r="140" fill="#f5d29a"/><path d="M0 660 L240 430 L480 690 L720 380 L980 700 L1280 450 L1540 690 L1760 420 L1920 620 L1920 1080 L0 1080Z" fill="#506b65"/><path d="M0 820 Q500 720 1000 830 T1920 790 L1920 1080 L0 1080Z" fill="#263f3c"/><path d="M0 930 Q600 860 1200 930 T1920 900" stroke="#d8b58b" strokeWidth="10" fill="none" opacity=".5"/></>}
+ </svg>;
 }
-function HallScene(){
- return <svg viewBox="0 0 1920 1080" width="100%" height="100%" style={{position:"absolute"}}>
- <defs><linearGradient id="hall" x2="0" y2="1"><stop stopColor="#263d52"/><stop offset="1" stopColor="#b17e5a"/></linearGradient></defs>
- <rect width="1920" height="1080" fill="url(#hall)"/>
- <path d="M0 0 L640 0 L900 1080 L0 1080Z" fill="#344c5d"/><path d="M1920 0 L1280 0 L1020 1080 L1920 1080Z" fill="#263b4d"/>
- <path d="M640 0 L1280 0 L1920 1080 L0 1080Z" fill="#d1a77d" opacity=".12"/>
- {Array.from({length:7},(_,i)=><g key={i}><path d={`M${i*320-100} 0 L${i*320+120} 0 L${i*220+240} 1080 L${i*220-60} 1080Z`} fill="#e9c08f" opacity=".07"/><circle cx={160+i*270} cy={150+(i%2)*70} r="28" fill="#f4c77d" opacity=".85"/></g>)}
- <path d="M0 850 L1920 850 L1920 1080 L0 1080Z" fill="#2a3038"/>
- <path d="M800 1080 L960 500 L1120 1080" fill="#d7b18a" opacity=".18"/>
- <Person x={960} y={560} scale={1.5}/>
- </svg>
+function Phone({x=1160,y=690,scale=1,tilt=0,glow=0}){
+ return <g transform={`translate(${x} ${y}) rotate(${tilt}) scale(${scale})`}><rect x="-62" y="-120" width="124" height="240" rx="19" fill="#080e18" stroke="#bac4cb" strokeWidth="7"/><rect x="-51" y="-104" width="102" height="207" rx="12" fill="#243e59"/><rect x="-34" y="-80" width="68" height="10" rx="5" fill="#d7e3e8" opacity=".35"/><circle cx="0" cy="-20" r="27" fill="#f0c66f" opacity={.65+glow*.35}/><path d="M-38 54 Q0 4 38 54 L38 74 L-38 74Z" fill="#e6a36e"/><circle cx="0" cy="90" r="5" fill="#dce4e8"/></g>;
 }
-function PhoneScene(){
- return <svg viewBox="0 0 1920 1080" width="100%" height="100%" style={{position:"absolute"}}>
- <defs><linearGradient id="desk" x2="0" y2="1"><stop stopColor="#263d4b"/><stop offset="1" stopColor="#101c2b"/></linearGradient></defs>
- <rect width="1920" height="1080" fill="#111c2b"/><circle cx="1450" cy="250" r="420" fill="#31566a" opacity=".25"/>
- <path d="M0 680 Q650 600 1250 690 T1920 650 L1920 1080 L0 1080Z" fill="url(#desk)"/>
- <rect x="330" y="745" width="1250" height="35" rx="18" fill="#927458"/><path d="M420 780 L400 1080 M1500 780 L1530 1080" stroke="#5c493d" strokeWidth="38"/>
- <g transform="translate(1170 330) rotate(-12)"><rect x="-112" y="-200" width="224" height="400" rx="34" fill="#080d17" stroke="#b5c0c9" strokeWidth="9"/><rect x="-94" y="-174" width="188" height="340" rx="20" fill="#263c56"/><circle cx="0" cy="135" r="10" fill="#d7e1e5"/><rect x="-65" y="-135" width="130" height="28" rx="14" fill="#d9e6ed" opacity=".22"/><circle cx="0" cy="-42" r="44" fill="#f3c56f"/><path d="M-58 55 Q0 -5 58 55 L58 95 L-58 95Z" fill="#e9a66c"/></g>
- <Person x={700} y={500} scale={1.28}/>
- <path d="M1070 120 Q1300 0 1480 150" stroke="#f0c77f" strokeWidth="5" fill="none" opacity=".4" strokeDasharray="12 18"/>
- </svg>
+function Shot({shot}){
+ const f=useCurrentFrame(), t=f/119, fadeIn=interpolate(f,[0,12],[0,1],clamp), fadeOut=interpolate(f,[107,119],[1,0],clamp);
+ const cam=shot.cam||0, zoom=1.04+0.045*Math.sin(t*Math.PI);
+ const px=shot.px??900, py=shot.py??700;
+ const pose=shot.pose||"idle";
+ const charX=shot.walk?mix(f,[0,119],[shot.walk[0],shot.walk[1]]):px;
+ const phoneX=shot.phoneX??1160;
+ return <AbsoluteFill style={{background:C.ink,opacity:Math.min(fadeIn,fadeOut)}}>
+  <AbsoluteFill style={{transform:`translateX(${cam+Math.sin(t*Math.PI*2)*8}px) scale(${zoom})`}}>
+   <Room night={shot.night!==false} location={shot.place||"bedroom"} f={f}/>
+   {shot.partner&&<Character x={1450} y={720} s={.9} shirt="#536b78" pose={shot.partnerPose||"idle"} f={f}/>}
+   {shot.desk&&<><rect x="180" y="760" width="700" height="24" rx="8" fill="#9b795b"/><path d="M240 784 L225 1080 M820 784 L840 1080" stroke="#463a34" strokeWidth="25"/></>}
+   {shot.phone&&<g transform={`translate(${mix(f,[0,35,80,119],[phoneX,phoneX+8,phoneX-8,phoneX])} 0)`}><Phone x={0} y={shot.phoneY||720} scale={shot.phoneScale||1} tilt={shot.phoneTilt||0} glow={Math.max(0,Math.sin(f*.3))}/></g>}
+   {shot.person!==false&&<Character x={charX} y={py} s={shot.scale||1.18} pose={pose} f={f}/>}
+   {shot.bubble&&<g opacity={interpolate(f,[10,24,92,110],[0,1,1,0],clamp)}><rect x="990" y="240" width="330" height="115" rx="28" fill="#f5eee2"/><path d="M1050 355 L1020 400 L1110 355" fill="#f5eee2"/><text x="1155" y="310" textAnchor="middle" fontSize="31" fontFamily="Arial" fill="#243447">{shot.bubble}</text></g>}
+   {shot.motionLine&&<path d="M1080 520 Q1200 450 1320 520" stroke="#f0c77f" strokeWidth="7" strokeDasharray="10 15" fill="none" opacity={.7}/>}
+  </AbsoluteFill>
+  <div style={{position:"absolute",top:70,left:110,font:"700 22px Arial",letterSpacing:7,color:C.gold}}>WISE-LAB  /  HUMAN BEHAVIOUR</div>
+  <Caption>{shot.caption}</Caption><Grain/>
+ </AbsoluteFill>;
 }
-function DawnScene(){
- return <svg viewBox="0 0 1920 1080" width="100%" height="100%" style={{position:"absolute"}}>
- <defs><linearGradient id="sky" x2="0" y2="1"><stop stopColor="#273e58"/><stop offset=".62" stopColor="#d58f6b"/><stop offset="1" stopColor="#edc28d"/></linearGradient></defs>
- <rect width="1920" height="1080" fill="url(#sky)"/><circle cx="1450" cy="330" r="145" fill="#f8d59a" opacity=".9"/>
- <path d="M0 700 L250 430 L440 680 L700 360 L980 720 L1210 480 L1450 720 L1680 400 L1920 690 L1920 1080 L0 1080Z" fill="#40576a"/>
- <path d="M0 810 L300 620 L540 820 L850 560 L1120 820 L1450 610 L1700 820 L1920 650 L1920 1080 L0 1080Z" fill="#263e4c"/>
- <path d="M0 900 Q500 820 1000 900 T1920 870 L1920 1080 L0 1080Z" fill="#182d36"/>
- <Person x={960} y={600} scale={1.32}/>
- <path d="M0 1010 Q600 940 1200 1000 T1920 970" stroke="#e6b983" strokeWidth="8" fill="none" opacity=".45"/>
- </svg>
-}
-const scenes = [
- {start:0, Component:WindowScene, title:"WHY YOUR BRAIN REPLAYS", sub:"THE MOMENTS YOU REGRET", caption:["One awkward moment happens.","Hours later, your mind replays it.","You imagine what you should have said.","The memory feels bigger each time.","But replaying it is not solving it."]},
- {start:450, Component:HallScene, title:"YOUR BRAIN IS SCANNING", sub:"FOR SOCIAL THREATS", caption:["Your brain is trying to protect you.","It scans for signs of rejection.","A small mistake can feel like a warning.","So your mind studies every detail.","Even when there is no real threat."]},
- {start:900, Component:PhoneScene, title:"THE LOOP FEELS URGENT", sub:"BUT IT ISN'T DANGER", caption:["Attention keeps feeding the memory.","You check it again and again.","That makes the thought feel urgent.","Urgency is not the same as danger.","You can choose not to follow the loop."]},
- {start:1350, Component:DawnScene, title:"NOTICE IT. THEN RELEASE IT.", sub:"YOU ARE NOT THAT MOMENT.", caption:["Notice the thought without fighting it.","Take one useful lesson, if there is one.","Then let the replay pass.","Bring your attention back to now.","You are more than one awkward moment."]}
+const shots=[
+ {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"wave",partner:true,bubble:"So... anyway.",caption:"A tiny awkward moment happens."},
+ {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"turn",partner:true,partnerPose:"turn",caption:"You notice a strange pause."},
+ {place:"cafe",night:false,px:720,py:710,scale:1.02,pose:"think",partner:true,partnerPose:"walk",caption:"The other person moves on."},
+ {place:"hall",night:false,px:mix(0,[0,119],[760,980]),py:730,scale:1.1,pose:"walk",walk:[760,980],caption:"But your mind keeps the moment."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"sit",desk:true,caption:"Hours later, it comes back."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"think",desk:true,bubble:"Why did I say that?",caption:"You replay what you should have said."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"reach",desk:true,phone:true,phoneX:1120,caption:"Then you reach for your phone."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"phone",desk:true,phone:true,phoneX:1010,phoneY:650,caption:"You check the conversation again."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"turn",desk:true,phone:true,phoneX:1010,phoneY:650,motionLine:true,caption:"Your attention feeds the loop."},
+ {place:"hall",night:true,px:950,py:730,scale:1.22,pose:"walk",walk:[1100,900],caption:"Your brain is scanning for social threats."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"think",desk:true,caption:"But replaying is not protection."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"reach",desk:true,phone:true,phoneX:1030,phoneY:720,caption:"Name the thought. Don't argue with it."},
+ {place:"bedroom",night:true,px:760,py:720,scale:1.18,pose:"idle",desk:true,phone:true,phoneX:1270,phoneY:790,phoneTilt:24,caption:"Keep the lesson. Let the rest pass."},
+ {place:"park",night:false,px:960,py:730,scale:1.2,pose:"walk",walk:[760,1120],caption:"Bring your attention back to now."},
+ {place:"park",night:false,px:1120,py:730,scale:1.2,pose:"idle",caption:"You are more than one awkward moment."}
 ];
-function Scene({item}){
- const local=useCurrentFrame();
- const shotFrames=[0,90,180,270,360,449];
- const zoom=interpolate(local,shotFrames,[1.02,1.12,1.06,1.16,1.08,1.14],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
- const panX=interpolate(local,shotFrames,[-12,-58,34,-42,48,0],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
- const panY=interpolate(local,shotFrames,[0,14,-12,18,-10,0],{extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
- const beatIndex=Math.min(4,Math.floor(local/90));
- const beatOpacity=interpolate(local%90,[0,8,82,89],[0,1,1,0],{extrapolateRight:"clamp"});
- const fade=interpolate(local,[0,24,425,449],[0,1,1,0],{extrapolateRight:"clamp"});
- return <AbsoluteFill style={{opacity:fade,background:C.ink}}>
-  <AbsoluteFill style={{transform:`translate(${panX}px,${panY}px) scale(${zoom})`}}><item.Component/></AbsoluteFill>
-  <div style={{position:"absolute",top:95,left:130,right:130,opacity:interpolate(local,[0,35],[0,1],{extrapolateRight:"clamp"})}}>
-   <div style={{fontFamily:"Arial",fontSize:24,fontWeight:700,letterSpacing:8,color:C.gold}}>WISE-LAB  /  HUMAN BEHAVIOUR</div>
-   <div style={{fontFamily:"Arial",fontSize:72,fontWeight:900,letterSpacing:1,color:C.cream,marginTop:20,lineHeight:1.03}}>{item.title}</div>
-   <div style={{fontFamily:"Arial",fontSize:33,fontWeight:700,letterSpacing:9,color:"#e8c18b",marginTop:16}}>{item.sub}</div>
-  </div>
-  <div style={{opacity:beatOpacity}}><Caption>{Array.isArray(item.caption)?item.caption[beatIndex]:item.caption}</Caption></div><Grain/>
- </AbsoluteFill>
-}
-export const WiseLabFilm = () => {
- const frame=useCurrentFrame();
- const opening=interpolate(frame,[0,35],[0,1],{extrapolateRight:"clamp"});
- return <AbsoluteFill style={{background:C.ink}}>
-  {scenes.map((item,i)=><Sequence key={i} from={item.start} durationInFrames={450}><Scene item={item}/></Sequence>)}
-  <Sequence from={0} durationInFrames={1800}><Audio src={staticFile("narration.mp3")} volume={0.92}/><Audio src={staticFile("ambience.wav")} volume={0.22}/></Sequence>
-  <div style={{position:"absolute",right:90,bottom:32,fontFamily:"Arial",fontSize:20,letterSpacing:5,color:"#f5eee0",opacity:.7}}>WISE-LAB</div>
- </AbsoluteFill>
-};
+export const WiseLabFilm=()=> <AbsoluteFill style={{background:C.ink}}>
+ {shots.map((shot,i)=><Sequence key={i} from={i*120} durationInFrames={120}><Shot shot={shot}/></Sequence>)}
+ <Sequence from={0} durationInFrames={1800}><Audio src={staticFile("narration.mp3")} volume={.94}/><Audio src={staticFile("ambience.wav")} volume={.2}/></Sequence>
+ <div style={{position:"absolute",right:85,bottom:28,font:"700 19px Arial",letterSpacing:5,color:"#f5eee2",opacity:.8}}>WISE-LAB</div>
+</AbsoluteFill>;
