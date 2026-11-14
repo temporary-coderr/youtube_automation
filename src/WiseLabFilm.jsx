@@ -95,7 +95,7 @@ export const WiseLabFilm = () => {
  const opening=interpolate(frame,[0,35],[0,1],{extrapolateRight:"clamp"});
  return <AbsoluteFill style={{background:C.ink}}>
   {scenes.map((item,i)=><Sequence key={i} from={item.start} durationInFrames={450}><Scene item={item}/></Sequence>)}
-  <Sequence from={0} durationInFrames={1080}><Audio src={staticFile("narration.mp3")} volume={0.92}/></Sequence>
+  <Sequence from={0} durationInFrames={1800}><Audio src={staticFile("narration.mp3")} volume={0.92}/><Audio src={staticFile("ambience.wav")} volume={0.22}/></Sequence>
   <div style={{position:"absolute",right:90,bottom:32,fontFamily:"Arial",fontSize:20,letterSpacing:5,color:"#f5eee0",opacity:.7}}>WISE-LAB</div>
  </AbsoluteFill>
 };
