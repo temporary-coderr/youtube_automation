@@ -179,7 +179,7 @@ def fox_svg(x: float, ground: float, t: float, scene: int, u: float) -> str:
     elif scene in (3, 4):
         root_x = 625; stride = 0.0
     else:
-        root_x = mix(625, 500, ease(u)); stride = 0.85
+        root_x = mix(625, 400, ease(u)); stride = 0.85
     phase = t * 7.8
     bob = abs(math.sin(phase)) * 5.0 * stride
     tail = 8 * math.sin(t * 3.8) + (7 if scene == 1 else 0)
