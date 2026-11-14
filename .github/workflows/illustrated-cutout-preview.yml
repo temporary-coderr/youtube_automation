@@ -1,0 +1,68 @@
+name: Illustrated 2D Cutout Preview
+on:
+  workflow_dispatch:
+    inputs:
+      ora_path:
+        description: "Repository path to the layered OpenRaster artwork"
+        required: true
+        default: "assets/characters/wise-lab-main/character-scene.ora"
+      rig_path:
+        description: "Rig map JSON path"
+        required: true
+        default: "prototype/illustrated_2d/rig-map.example.json"
+      duration:
+        description: "Preview duration in seconds"
+        required: true
+        default: "10"
+      format:
+        description: "Output format"
+        required: true
+        type: choice
+        options: [landscape, vertical]
+        default: landscape
+permissions:
+  contents: read
+concurrency:
+  group: illustrated-cutout-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender ffmpeg
+          blender --version | head -n 2
+      - name: Validate artwork inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "${{ inputs.ora_path }}" || { echo "Layered .ora artwork is missing; add the approved painted asset first."; exit 2; }
+          test -s "${{ inputs.rig_path }}"
+      - name: Render painted layers with Blender armature
+        run: |
+          set -euo pipefail
+          mkdir -p renders
+          if [ "${{ inputs.format }}" = "vertical" ]; then W=720; H=1280; else W=1280; H=720; fi
+          blender --background --python production/ora_cutout_renderer.py -- \
+            --ora "${{ inputs.ora_path }}" --rig "${{ inputs.rig_path }}" \
+            --out renders/wise-lab-illustrated-cutout.mp4 \
+            --duration "${{ inputs.duration }}" --fps 24 --width "$W" --height "$H"
+      - name: Validate MP4 and build contact sheet
+        run: |
+          set -euo pipefail
+          test -s renders/wise-lab-illustrated-cutout.mp4
+          ffprobe -v error -show_entries stream=codec_name,width,height -show_entries format=duration -of json renders/wise-lab-illustrated-cutout.mp4 | tee renders/ffprobe.json
+          ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-illustrated-cutout.mp4 -vf "fps=1,scale=480:-1,tile=5x2" -frames:v 1 renders/contact-sheet.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-illustrated-cutout-${{ github.run_number }}
+          path: |
+            renders/wise-lab-illustrated-cutout.mp4
+            renders/contact-sheet.jpg
+            renders/ffprobe.json
+          if-no-files-found: error
+          retention-days: 14

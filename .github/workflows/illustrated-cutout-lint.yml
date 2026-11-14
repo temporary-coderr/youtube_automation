@@ -1,0 +1,86 @@
+name: Illustrated Cutout Static Validation
+on:
+  push:
+    branches: [feature/illustrated-cutout-renderer]
+    paths:
+      - "production/ora_cutout_renderer.py"
+      - "prototype/illustrated_2d/rig-map.example.json"
+      - ".github/workflows/illustrated-cutout-lint.yml"
+      - ".github/workflows/free-artwork-provider-probe.yml"
+  pull_request:
+    branches: [experiment/illustrated-2d-rig]
+    paths:
+      - "production/ora_cutout_renderer.py"
+      - "prototype/illustrated_2d/rig-map.example.json"
+      - ".github/workflows/illustrated-cutout-lint.yml"
+      - ".github/workflows/free-artwork-provider-probe.yml"
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile renderer
+        run: python -m py_compile production/ora_cutout_renderer.py
+      - name: Validate rig hierarchy and layer pivots
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("prototype/illustrated_2d/rig-map.example.json")
+          rig = json.loads(p.read_text())
+          bones = rig["bones"]
+          required = {"root", "torso", "head", "upper_arm_R", "forearm_R", "hand_R"}
+          assert required.issubset(bones), f"missing bones: {required-set(bones)}"
+          for name, bone in bones.items():
+              parent = bone.get("parent")
+              assert parent is None or parent in bones, f"{name}: missing parent {parent}"
+          for name, layer in rig["layers"].items():
+              bone = layer["bone"]
+              assert bone in bones, f"{name}: missing attachment bone {bone}"
+              px, py = layer["pivot"]
+              bx, by = bones[bone]["head"]
+              assert abs(px-bx) <= 3 and abs(py-by) <= 3, f"{name}: pivot does not match {bone} head"
+          print(f"Validated {len(bones)} bones and {len(rig['layers'])} painted layer mappings")
+          PY
+
+  free-artwork-provider-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Install image validator
+        run: python -m pip install --disable-pip-version-check pillow
+      - name: Request one free anonymous artwork sample
+        shell: bash
+        env:
+          PROMPT: "high quality editorial 2D illustrated animation background, cinematic rainy city street at night, detailed hand-painted digital illustration, layered depth, rich atmospheric lighting, no text, no watermark"
+        run: |
+          set -euo pipefail
+          mkdir -p probe-output
+          ENCODED_PROMPT="$(python -c 'import os,urllib.parse; print(urllib.parse.quote(os.environ["PROMPT"]))')"
+          URL="https://image.pollinations.ai/prompt/${ENCODED_PROMPT}?width=768&height=768&seed=4182026&nologo=true"
+          HTTP_CODE="$(curl --location --silent --show-error --max-time 150 --retry 1 --retry-delay 50 --user-agent "Mozilla/5.0 WISE-LAB-GitHubActions/1.0" --output probe-output/sample-image --write-out "%{http_code}" "$URL")"
+          echo "Provider HTTP status: $HTTP_CODE"
+          test "$HTTP_CODE" = "200" || { echo "Free anonymous image endpoint did not return HTTP 200."; head -c 1000 probe-output/sample-image || true; exit 1; }
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          p=Path("probe-output/sample-image")
+          with Image.open(p) as im:
+              im.verify()
+          with Image.open(p) as im:
+              suffix=im.format.lower()
+              print(f"IMAGE_OK format={im.format} size={im.size} mode={im.mode} bytes={p.stat().st_size}")
+              p.rename(f"probe-output/artwork-sample.{suffix}")
+          PY
+      - name: Upload generated sample
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-artwork-provider-probe-${{ github.run_number }}
+          path: probe-output/artwork-sample.*
+          if-no-files-found: error
+          retention-days: 7
