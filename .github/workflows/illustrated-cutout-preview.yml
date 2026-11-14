@@ -23,7 +23,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: illustrated-cutout-\${{ github.ref }}
+  group: illustrated-cutout-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   render:
@@ -40,17 +40,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s "\${{ inputs.ora_path }}" || { echo "Layered .ora artwork is missing; add the approved painted asset first."; exit 2; }
-          test -s "\${{ inputs.rig_path }}"
+          test -s "${{ inputs.ora_path }}" || { echo "Layered .ora artwork is missing; add the approved painted asset first."; exit 2; }
+          test -s "${{ inputs.rig_path }}"
       - name: Render painted layers with Blender armature
         run: |
           set -euo pipefail
           mkdir -p renders
-          if [ "\${{ inputs.format }}" = "vertical" ]; then W=720; H=1280; else W=1280; H=720; fi
+          if [ "${{ inputs.format }}" = "vertical" ]; then W=720; H=1280; else W=1280; H=720; fi
           blender --background --python production/ora_cutout_renderer.py -- \
-            --ora "\${{ inputs.ora_path }}" --rig "\${{ inputs.rig_path }}" \
+            --ora "${{ inputs.ora_path }}" --rig "${{ inputs.rig_path }}" \
             --out renders/wise-lab-illustrated-cutout.mp4 \
-            --duration "\${{ inputs.duration }}" --fps 24 --width "$W" --height "$H"
+            --duration "${{ inputs.duration }}" --fps 24 --width "$W" --height "$H"
       - name: Validate MP4 and build contact sheet
         run: |
           set -euo pipefail
@@ -59,7 +59,7 @@ jobs:
           ffmpeg -hide_banner -loglevel error -y -i renders/wise-lab-illustrated-cutout.mp4 -vf "fps=1,scale=480:-1,tile=5x2" -frames:v 1 renders/contact-sheet.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: wise-lab-illustrated-cutout-\${{ github.run_number }}
+          name: wise-lab-illustrated-cutout-${{ github.run_number }}
           path: |
             renders/wise-lab-illustrated-cutout.mp4
             renders/contact-sheet.jpg
