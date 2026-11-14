@@ -2,7 +2,7 @@ import React from "react";
 import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile, Easing} from "remotion";
 
 /*
- * WISE-LAB — illustrated story film v2
+ * WISE-LAB — motion-comic story film v3
  * Original layered editorial artwork, articulated character rigs, prop animation,
  * motivated camera movement and scene-specific blocking. No stock footage or paid APIs.
  */
@@ -400,7 +400,8 @@ function Shot({shot,index}){
  const local = Math.max(0,Math.min(119,f));
  const z=lerp(local,0,119,shot.zoom[0],shot.zoom[1]);
  const pan=lerp(local,0,119,shot.pan[0],shot.pan[1]);
- const fade=interpolate(local,[0,7,112,119],[0,1,1,0],clamp);
+ // Motion-comic edit: keep every middle shot fully visible; fade only the film opening and ending.
+ const fade = index===0 ? interpolate(local,[0,8],[0,1],clamp) : index===shots.length-1 ? interpolate(local,[111,119],[1,0],clamp) : 1;
  const camX=(W-W*z)/2+pan, camY=(H-H*z)/2+Math.sin(local*.035)*3;
  const lead=shot.lead;
  const friend=shot.friend;
