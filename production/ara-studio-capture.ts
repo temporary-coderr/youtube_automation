@@ -53,7 +53,8 @@ export async function captureStudioExample(h:Harness) {
   await ready();await pause(500);
   const info=await e<{actors:number;duration:number;clips:string[]}>('(()=>({actors:studio.project.actors.length,duration:Math.max(...studio.project.actors.map(a=>a.beats.reduce((s,b)=>s+b.duration,0)),studio.project.shots.reduce((s,b)=>s+b.duration,0)),clips:studio.project.actors.flatMap(a=>a.beats.map(b=>b.clip))}))()');
   if(info.actors!==2||info.duration<14.99||!info.clips.includes('texting')||!info.clips.includes('walk'))throw new Error('WISE-LAB story project failed validation: '+JSON.stringify(info));
-  const size=await e<{width:number;height:number}>('(async()=>await studio.supportsMp4(1920,1080)?{width:1920,height:1080}:{width:1280,height:720})()');
+  // The hosted runner uses SwiftShader software rendering; cap this proof at 720p.
+  const size={width:1280,height:720};
   await e('(()=>{window.__wiseLab3dRender={done:0,total:450,ready:false,error:""};const p=structuredClone(studio.project);studio.exportMovie(studio.scene,p,{width:'+size.width+',height:'+size.height+',signal:new AbortController().signal,progress:(done,total)=>Object.assign(window.__wiseLab3dRender,{done,total})}).then(blob=>{window.__wiseLab3dMovie=blob;window.__wiseLab3dRender.ready=true;},error=>{window.__wiseLab3dRender.error=String(error?.stack||error);});})()');
   const deadline=Date.now()+18*60*1000;let last=0;
   for(;;){const state=await e<{done:number;total:number;ready:boolean;error:string}>('window.__wiseLab3dRender');if(state.error)throw new Error('Ara Studio MP4 export failed: '+state.error);if(state.ready)break;if(Date.now()>deadline)throw new Error('15-second WISE-LAB render timed out.');if(state.done-last>=45){last=state.done;console.log('WISE-LAB 3D pilot: '+state.done+'/'+state.total+' frames');}await pause(800);}
