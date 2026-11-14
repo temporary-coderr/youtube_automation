@@ -72,7 +72,7 @@ function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=
       <path d="M91 -188 Q71 -188 69 -170 Q76 -157 95 -169 Q109 -180 91 -188Z" fill={skin}/>
       <path d="M85 -181 L79 -165 M95 -179 L91 -162" stroke="#8d5948" strokeWidth="3" strokeLinecap="round"/>
     </g>
-    <g transform="translate(0 -465) rotate("+bodyTurn+")">
+    <g transform={"translate(0 -465) rotate("+bodyTurn+")"}>
       <path d="M-66 -16 Q-69 -100 -24 -127 Q28 -147 65 -88 Q82 -54 55 30 Q33 73 -16 67 Q-61 51 -66 -16Z" fill={skin}/>
       <path d="M-66 -31 Q-94 -112 -38 -150 Q12 -184 62 -142 Q94 -113 71 -62 L49 -83 Q22 -69 -5 -83 Q-26 -97 -51 -49Z" fill={hair}/>
       {lead ? <path d="M-52 -83 Q-72 -144 -17 -170 Q12 -184 43 -163 Q8 -152 8 -125 Q-19 -113 -52 -83Z" fill="#20242c"/> :
