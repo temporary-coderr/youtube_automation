@@ -61,12 +61,14 @@ function Shot({shot}){
  return <AbsoluteFill style={{background:C.ink,opacity:Math.min(fadeIn,fadeOut)}}>
   <AbsoluteFill style={{transform:`translateX(${cam+Math.sin(t*Math.PI*2)*8}px) scale(${zoom})`}}>
    <Room night={shot.night!==false} location={shot.place||"bedroom"} f={f}/>
-   {shot.partner&&<Character x={1450} y={720} s={.9} shirt="#536b78" pose={shot.partnerPose||"idle"} f={f}/>}
-   {shot.desk&&<><rect x="180" y="760" width="700" height="24" rx="8" fill="#9b795b"/><path d="M240 784 L225 1080 M820 784 L840 1080" stroke="#463a34" strokeWidth="25"/></>}
-   {shot.phone&&<g transform={`translate(${mix(f,[0,35,80,119],[phoneX,phoneX+8,phoneX-8,phoneX])} 0)`}><Phone x={0} y={shot.phoneY||720} scale={shot.phoneScale||1} tilt={shot.phoneTilt||0} glow={Math.max(0,Math.sin(f*.3))}/></g>}
-   {shot.person!==false&&<Character x={charX} y={py} s={shot.scale||1.18} pose={pose} f={f}/>}
-   {shot.bubble&&<g opacity={interpolate(f,[10,24,92,110],[0,1,1,0],clamp)}><rect x="990" y="240" width="330" height="115" rx="28" fill="#f5eee2"/><path d="M1050 355 L1020 400 L1110 355" fill="#f5eee2"/><text x="1155" y="310" textAnchor="middle" fontSize="31" fontFamily="Arial" fill="#243447">{shot.bubble}</text></g>}
-   {shot.motionLine&&<path d="M1080 520 Q1200 450 1320 520" stroke="#f0c77f" strokeWidth="7" strokeDasharray="10 15" fill="none" opacity={.7}/>}
+   <svg viewBox="0 0 1920 1080" width="100%" height="100%" style={{position:"absolute"}}>
+    {shot.partner&&<Character x={1450} y={720} s={.9} shirt="#536b78" pose={shot.partnerPose||"idle"} f={f}/>}
+    {shot.desk&&<><rect x="180" y="760" width="700" height="24" rx="8" fill="#9b795b"/><path d="M240 784 L225 1080 M820 784 L840 1080" stroke="#463a34" strokeWidth="25"/></>}
+    {shot.phone&&<g transform={`translate(${mix(f,[0,35,80,119],[phoneX,phoneX+8,phoneX-8,phoneX])} 0)`}><Phone x={0} y={shot.phoneY||720} scale={shot.phoneScale||1} tilt={shot.phoneTilt||0} glow={Math.max(0,Math.sin(f*.3))}/></g>}
+    {shot.person!==false&&<Character x={charX} y={py} s={shot.scale||1.18} pose={pose} f={f}/>}
+    {shot.bubble&&<g opacity={interpolate(f,[10,24,92,110],[0,1,1,0],clamp)}><rect x="990" y="240" width="330" height="115" rx="28" fill="#f5eee2"/><path d="M1050 355 L1020 400 L1110 355" fill="#f5eee2"/><text x="1155" y="310" textAnchor="middle" fontSize="31" fontFamily="Arial" fill="#243447">{shot.bubble}</text></g>}
+    {shot.motionLine&&<path d="M1080 520 Q1200 450 1320 520" stroke="#f0c77f" strokeWidth="7" strokeDasharray="10 15" fill="none" opacity={.7}/>}
+   </svg>
   </AbsoluteFill>
   <div style={{position:"absolute",top:70,left:110,font:"700 22px Arial",letterSpacing:7,color:C.gold}}>WISE-LAB  /  HUMAN BEHAVIOUR</div>
   <Caption>{shot.caption}</Caption><Grain/>
