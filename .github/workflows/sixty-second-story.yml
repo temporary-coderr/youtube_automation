@@ -24,6 +24,7 @@ jobs:
           python3 -m pip install --user --break-system-packages edge-tts
       - name: Write original 60-second narration and captions
         run: |
+          set -euo pipefail
           mkdir -p renders/audio renders/pilot_frames
           cat > renders/audio/narration.txt <<'TXT'
           You answer one message. Then another. A quick reply becomes a conversation, and suddenly your evening belongs to everyone except you. Being available feels helpful, even responsible. But every notification pulls your attention away from the person, task, or moment right in front of you. At work, constant checking leaves your mind switching instead of thinking deeply. Outside, the phone follows you into every quiet moment. Here is the hidden cost: you never fully arrive anywhere. Try one small boundary. Choose a time to silence nonessential alerts. Put your phone out of reach while you eat, work, or rest. People who care about you can wait a little. Your attention is not an unlimited public resource. Being reachable is useful. Being permanently available is exhausting. Give your mind permission to come back to you.
@@ -63,8 +64,9 @@ jobs:
           00:00:54,000 --> 00:01:00,000
           Being reachable is useful.
           Being permanently available is exhausting.
-          TXT
+          SRT
           edge-tts --voice en-US-AriaNeural --rate=+2% --file renders/audio/narration.txt --write-media renders/audio/narration.mp3
+          test -s renders/audio/narration.mp3 || { echo 'Narration generation produced no MP3'; exit 1; }
       - name: Render new character and six environments in Blender
         run: |
           set -euo pipefail
