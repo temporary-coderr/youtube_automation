@@ -7,12 +7,16 @@
     "head": { "head": [960, 450], "tail": [960, 280], "parent": "neck" },
     "upper_arm_L": { "head": [830, 500], "tail": [760, 650], "parent": "torso" },
     "forearm_L": { "head": [760, 650], "tail": [740, 790], "parent": "upper_arm_L" },
+    "hand_L": { "head": [740, 790], "tail": [700, 815], "parent": "forearm_L" },
     "upper_arm_R": { "head": [1090, 500], "tail": [1190, 640], "parent": "torso" },
     "forearm_R": { "head": [1190, 640], "tail": [1250, 760], "parent": "upper_arm_R" },
+    "hand_R": { "head": [1250, 760], "tail": [1290, 785], "parent": "forearm_R" },
     "thigh_L": { "head": [900, 760], "tail": [860, 900], "parent": "root" },
     "shin_L": { "head": [860, 900], "tail": [850, 1030], "parent": "thigh_L" },
+    "foot_L": { "head": [850, 1030], "tail": [780, 1030], "parent": "shin_L" },
     "thigh_R": { "head": [1020, 760], "tail": [1060, 900], "parent": "root" },
-    "shin_R": { "head": [1060, 900], "tail": [1080, 1030], "parent": "thigh_R" }
+    "shin_R": { "head": [1060, 900], "tail": [1080, 1030], "parent": "thigh_R" },
+    "foot_R": { "head": [1080, 1030], "tail": [1150, 1030], "parent": "shin_R" }
   },
   "layers": {
     "head": { "bone": "head", "pivot": [960, 450], "required": true },
@@ -21,15 +25,15 @@
     "torso": { "bone": "torso", "pivot": [960, 760], "required": true },
     "upper_arm_L": { "bone": "upper_arm_L", "pivot": [830, 500], "required": true },
     "forearm_L": { "bone": "forearm_L", "pivot": [760, 650], "required": true },
-    "hand_L": { "bone": "forearm_L", "pivot": [740, 790], "required": true },
+    "hand_L": { "bone": "hand_L", "pivot": [740, 790], "required": true },
     "upper_arm_R": { "bone": "upper_arm_R", "pivot": [1090, 500], "required": true },
     "forearm_R": { "bone": "forearm_R", "pivot": [1190, 640], "required": true },
-    "hand_R": { "bone": "forearm_R", "pivot": [1250, 760], "required": true },
+    "hand_R": { "bone": "hand_R", "pivot": [1250, 760], "required": true },
     "thigh_L": { "bone": "thigh_L", "pivot": [900, 760], "required": true },
     "shin_L": { "bone": "shin_L", "pivot": [860, 900], "required": true },
-    "foot_L": { "bone": "shin_L", "pivot": [850, 1030], "required": true },
+    "foot_L": { "bone": "foot_L", "pivot": [850, 1030], "required": true },
     "thigh_R": { "bone": "thigh_R", "pivot": [1020, 760], "required": true },
     "shin_R": { "bone": "shin_R", "pivot": [1060, 900], "required": true },
-    "foot_R": { "bone": "shin_R", "pivot": [1080, 1030], "required": true }
+    "foot_R": { "bone": "foot_R", "pivot": [1080, 1030], "required": true }
   }
 }
