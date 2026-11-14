@@ -17,10 +17,10 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - name: Install 2D renderer, offline narration and video tools
+      - name: Install 2D renderer, neural narration and video tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-cairosvg python3-pil ffmpeg espeak-ng fonts-dejavu-core
+          sudo apt-get install -y python3-cairosvg python3-pil ffmpeg fonts-dejavu-core\n          python3 -m pip install --user --break-system-packages edge-tts
       - name: Render illustrated animal story
         run: |
           set -euo pipefail
