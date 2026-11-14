@@ -20,7 +20,8 @@ jobs:
       - name: Install 2D renderer, neural narration and video tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-cairosvg python3-pil ffmpeg fonts-dejavu-core\n          python3 -m pip install --user --break-system-packages edge-tts
+          sudo apt-get install -y python3-cairosvg python3-pil ffmpeg fonts-dejavu-core
+          python3 -m pip install --user --break-system-packages edge-tts
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
       - name: Render illustrated animal story
         run: |
