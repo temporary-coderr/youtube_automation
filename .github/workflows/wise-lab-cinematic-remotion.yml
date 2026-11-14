@@ -1,0 +1,52 @@
+name: WISE-LAB Cinematic Preview
+on:
+  push:
+    branches: [wise-lab-cinematic-v1]
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/wise-lab-cinematic-remotion.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Install JavaScript dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Edge TTS
+        run: python -m pip install --no-cache-dir edge-tts
+      - name: Generate narration
+        run: |
+          mkdir -p public out
+          edge-tts --voice en-US-AndrewNeural --rate="+2%" --text "$(cat scripts/narration.txt)" --write-media public/narration.mp3
+          test -s public/narration.mp3
+      - name: Render cinematic MP4
+        run: npx remotion render src/index.jsx WiseLab out/wise-lab-cinematic-preview.mp4 --codec h264 --crf 20 --log=error
+      - name: Validate MP4
+        run: |
+          test -s out/wise-lab-cinematic-preview.mp4
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height -of json out/wise-lab-cinematic-preview.mp4
+      - name: Upload MP4 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wise-lab-cinematic-preview
+          path: out/wise-lab-cinematic-preview.mp4
+          if-no-files-found: error
+          retention-days: 14
