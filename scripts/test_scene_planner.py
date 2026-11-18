@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from plan_scenes import make_fallback_plan, sentences_from_script, infer_props
+from plan_scenes import make_fallback_plan, sentences_from_script, infer_props, infer_place
 
 class ScenePlannerTests(unittest.TestCase):
     def test_visual_plan_uses_two_to_seven_fixed_characters(self):
@@ -23,6 +23,12 @@ class ScenePlannerTests(unittest.TestCase):
 
     def test_phone_visual_selects_phone_prop(self):
         self.assertIn("phone", infer_props("A notification lights up the phone screen."))
+
+    def test_story_context_selects_specific_environments(self):
+        self.assertEqual(infer_place("The student enters the classroom.", 0), "classroom")
+        self.assertEqual(infer_place("The team gathers in the office.", 0), "office")
+        self.assertEqual(infer_place("She studies in the library.", 0), "library")
+        self.assertEqual(infer_place("The family sits on the sofa at home.", 0), "living-room")
 
     def test_empty_script_is_rejected(self):
         with self.assertRaises(ValueError):
