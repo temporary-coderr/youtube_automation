@@ -135,18 +135,23 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
             indexes=beat["sentence_indexes"]
             if not indexes or indexes != list(range(indexes[0], indexes[-1]+1)): return None
             ids=beat.get("characters",[])
+            if not isinstance(ids,list): return None
             if not 1 <= len(ids) <= 2 or any(x not in CAST for x in ids): return None
             place=beat.get("place")
             if place not in PLACES: return None
             excerpt=" ".join(excerpts[i] for i in indexes)
             sticker=beat.get("sticker")
+            if sticker and not isinstance(sticker,dict): sticker=None
             if sticker and sticker.get("type") not in STICKERS: sticker=None
             required = {"tag":["text"],"stat":["value"],"definition":["term","text"],"steps":["items"],"quote":["text"],"compare":["left","right"],"diagram":["items"],"timeline":["items"],"callout":["title"]}
             if sticker and any(not sticker.get(field) for field in required.get(sticker["type"],[])): sticker=None
             if sticker and sticker.get("type")=="stat" and not any(str(n) in str(sticker.get("value","")) for n in re.findall(r"\d+(?:\.\d+)?%?",excerpt)):
                 sticker=None
             if sticker is None: sticker=infer_sticker(excerpt,n)
-            props=[p for p in beat.get("props",[]) if p in PROPS][:3]
+            props=[p for p in beat.get("props",[]) if p in PROPS][:3] if isinstance(beat.get("props",[]),list) else []
+            camera=beat.get("camera","push-in")
+            camera_map={"push-in":([1.0,1.07],[0,-24]),"pull-back":([1.07,1.0],[0,0]),"tracking":([1.02,1.05],[-55,0]),"pan-left":([1.04,1.04],[55,0]),"pan-right":([1.04,1.04],[-55,0]),"over-shoulder":([1.08,1.12],[-35,-20]),"parallax":([1.0,1.05],[0,-18]),"locked":([1.0,1.0],[0,0])}
+            zoom,pan=camera_map.get(camera,([1.0,1.05],[0,-20]))
             duration=max(90,round(len(excerpt.split())*60*30/140))
             shots.append({
               "place":place,"title":f"SCENE {n+1:02d}","caption":excerpt[:112],"durationInFrames":duration,
