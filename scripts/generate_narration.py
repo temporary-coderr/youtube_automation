@@ -58,7 +58,7 @@ def sync_scene_duration():
     for shot in plan["shots"]:
         shot["durationInFrames"] = max(90, round(shot.get("durationInFrames",90) * target_frames / max(1,old_total)))
     plan["durationInFrames"] = sum(s["durationInFrames"] for s in plan["shots"])
-    plan_path.write_text(prefix + json.dumps(plan,ensure_ascii=False,indent=2) + ";\\n",encoding="utf-8")
+    plan_path.write_text(prefix + json.dumps(plan,ensure_ascii=False,indent=2) + ";\n",encoding="utf-8")
     print(f"Adjusted visual timeline to {audio_seconds:.1f}s of generated narration")
 
 async def generate():
@@ -118,3 +118,4 @@ if __name__ == "__main__":
             cursor += span
         SRT.write_text("\n".join(lines), encoding="utf-8")
         write_caption_module()
+        sync_scene_duration()
