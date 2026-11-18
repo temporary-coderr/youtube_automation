@@ -212,7 +212,7 @@ def main():
     if not plan.get("shots"): plan=make_fallback_plan(script)
     duration=sum(s["durationInFrames"] for s in plan["shots"])
     plan["durationInFrames"]=duration
-    OUTPUT.write_text("export const GENERATED_SCENE_PLAN = "+json.dumps(plan,ensure_ascii=False,indent=2)+";\\n",encoding="utf-8")
+    OUTPUT.write_text("export const GENERATED_SCENE_PLAN = "+json.dumps(plan,ensure_ascii=False,indent=2)+";\n",encoding="utf-8")
     print(f"Visual plan: {len(plan['shots'])} scenes, {len({s[k]['characterId'] for s in plan['shots'] for k in ('lead','friend') if s.get(k)})} fixed characters, {duration/30:.1f}s; source script unchanged.")
 
 if __name__=="__main__": main()
