@@ -2,6 +2,7 @@ import React from "react";
 import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile, Easing} from "remotion";
 import {WISE_LAB_CAST} from "./wiseLabCast";
 import {StoryStickerLayer} from "./StoryStickerLayer";
+import {ScenePropLayer} from "./ScenePropLayer";
 import {validateStoryShots} from "./storyRules";
 import {validateVisualDirection} from "./sceneDirector";
 import {GENERATED_SCENE_PLAN} from "./generatedScenePlan";
@@ -463,6 +464,7 @@ function Shot({shot,index}){
         <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
         {shot.birds && <ParkBirds frame={local}/>}
       </>}
+      <ScenePropLayer props={shot.props || []} frame={local} lead={lead} place={shot.place}/>
       {shot.bubble && <g opacity={interpolate(local,[14,26,90,110],[0,1,1,0],clamp)}>
         <path d="M990 240 Q990 210 1020 210 H1320 Q1350 210 1350 240 V323 Q1350 353 1320 353 H1085 L1040 392 L1052 353 H1020 Q990 353 990 323Z" fill="#eee8dc"/>
         <text x="1170" y="270" fontSize="29" fill="#273542" fontFamily="Georgia" textAnchor="middle" fontStyle="italic">"So... anyway."</text>
