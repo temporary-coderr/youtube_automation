@@ -140,13 +140,15 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
       "allowed_character_ids":CAST,
       "allowed_environments":PLACES,
       "allowed_actions":ACTIONS,
-      "allowed_sticker_types":sorted(STICKERS),\n      "allowed_psychology_visuals":sorted(PSYCHOLOGY_VISUALS),
+      "allowed_sticker_types":sorted(STICKERS),
+      "allowed_psychology_visuals":sorted(PSYCHOLOGY_VISUALS),
       "allowed_props":sorted(PROPS),
       "rules":[
         "Use 2 to 7 distinct fixed characters across the entire video; at most 2 characters in any scene.",
         "A scene has one or two characters in lead/friend roles, chosen only from allowed IDs.",
         "Group adjacent sentence indexes into coherent visual beats. Every sentence index must appear exactly once, in original order.",
-        "Use a suitable environment, meaningful action, and optional props from allowed_props. Use an explainer sticker only when it clarifies the script.",
+        "Use a suitable environment, meaningful action, and optional props from allowed_props. Use a psychology visual only when it clearly illustrates the beat.",
+        "If using a sticker, choose visual from allowed_psychology_visuals. Set motion to dynamic for subtle movement or static when motion would distract; dynamic is the default.",
         "Return JSON only: {beats:[{sentence_indexes:[0],place:'cafe',characters:['alex','maya'],lead_action:'gesture',friend_action:'idle',props:['mug'],sticker:null,camera:'push-in'}]}.",
         "Do not create new characters, new narration, dialogue, statistics, research claims or text not present in the script."
       ]
@@ -203,7 +205,8 @@ def main():
     if not plan.get("shots"): plan=make_fallback_plan(script)
     duration=sum(s["durationInFrames"] for s in plan["shots"])
     plan["durationInFrames"]=duration
-    OUTPUT.write_text("export const GENERATED_SCENE_PLAN = "+json.dumps(plan,ensure_ascii=False,indent=2)+";\n",encoding="utf-8")
+    OUTPUT.write_text("export const GENERATED_SCENE_PLAN = "+json.dumps(plan,ensure_ascii=False,indent=2)+";
+",encoding="utf-8")
     print(f"Visual plan: {len(plan['shots'])} scenes, {len({s[k]['characterId'] for s in plan['shots'] for k in ('lead','friend') if s.get(k)})} fixed characters, {duration/30:.1f}s; source script unchanged.")
 
 if __name__=="__main__": main()
