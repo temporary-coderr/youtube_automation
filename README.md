@@ -25,7 +25,7 @@ WISE-LAB is a script-first 2D animation production system. The creator supplies 
 - `src/wiseLabCast.js` — recurring character bible and cast constraints.
 - `src/wiseLabAssets.js` / `assets/item-library.json` — reusable visual asset catalogue.
 - `src/sceneDirector.js` / `scripts/plan_scenes.py` — visual planning and validation.
-- `src/WiseLabFilm.jsx` — character rig, environments, camera and Remotion scene composition.
+- `src/WiseLabFilm.jsx` / `src/EnvironmentLibrary.jsx` — character rig, varied vector environments, camera and Remotion scene composition.
 - `src/ScenePropLayer.jsx` — reusable vector props.
 - `src/StoryStickerLayer.jsx` — animated explanatory graphics.
 - `src/NarrationCaptionLayer.jsx` — single narration-synchronized subtitle track.
