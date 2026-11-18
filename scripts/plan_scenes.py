@@ -50,20 +50,45 @@ def infer_place(text: str, index: int) -> str:
     if any(w in t for w in ("friend", "conversation", "people", "social", "awkward", "someone", "relationship")): return "cafe"
     return ["cafe", "street", "bedroom", "park"][index % 4]
 
+PSYCHOLOGY_VISUALS = {
+    "thought_loop": ("overthink","replay","ruminate","looping thoughts","stuck in your head"),
+    "attention_trap": ("notification","distract","scroll","phone","interruption"),
+    "social_mirror": ("compare","comparison","jealous","everyone else","social media"),
+    "boundary_shield": ("boundary","say no","people pleasing","protect your time"),
+    "focus_spotlight": ("focus","concentrate","deep work","single task"),
+    "habit_cycle": ("habit","routine","trigger","cue","reward"),
+    "memory_web": ("memory","remember","forget","recall","learning"),
+    "stress_meter": ("stress","overwhelmed","anxiety","pressure","tense"),
+    "confidence_ladder": ("confidence","self belief","small wins","progress","courage"),
+    "emotional_wave": ("emotion","feeling","mood","sadness","anger","regulate"),
+    "decision_fork": ("decision","choose","choice","options","trade off"),
+    "sleep_rhythm": ("sleep","rest","bedtime","circadian","tired")
+}
+
+def infer_psychology_visual(text: str) -> str | None:
+    t = text.lower()
+    priority = ["thought_loop","attention_trap","social_mirror","boundary_shield","habit_cycle","stress_meter","confidence_ladder","decision_fork","sleep_rhythm","memory_web","emotional_wave","focus_spotlight"]
+    for visual in priority:
+        if any(term in t for term in PSYCHOLOGY_VISUALS[visual]):
+            return visual
+    return None
+
 def infer_sticker(text: str, index: int):
     t = text.lower()
+    visual = infer_psychology_visual(text)
     if any(w in t for w in ("step", "first", "second", "third", "try this", "practice")):
-        return {"type":"steps","label":"A PRACTICAL RESET","title":"Try this","items":["Notice the pattern","Name what is true","Choose your next action"],"tone":"mint"}
-    if any(w in t for w in ("versus", "instead", "but ", "rather than", "difference", "compare")):
-        return {"type":"compare","left":{"label":"THE REACTION","title":"Automatic response","text":"The first impulse."},"right":{"label":"THE CHOICE","title":"Intentional response","text":"A more considered next step."},"tone":"coral"}
-    if any(w in t for w in ("means", "called", "definition", "psychology", "pattern")):
-        term = "The pattern"
-        return {"type":"definition","term":term,"text":"A repeated response that shapes how we think and act.","tone":"blue"}
-    if any(w in t for w in ("percent", "%", "study", "research", "data", "number")):
-        return {"type":"stat","label":"A POINT TO REMEMBER","value":"KEY IDEA","note":"Keep the evidence and its source in the narration.","tone":"gold"}
-    if any(w in t for w in ("remember", "truth", "lesson", "mind", "attention")):
-        return {"type":"tag","text":"THE KEY IDEA","tone":"gold"}
-    return None
+        result = {"type":"steps","label":"A PRACTICAL RESET","title":"Try this","items":["Notice the pattern","Name what is true","Choose your next action"],"tone":"mint"}
+    elif any(w in t for w in ("versus", "instead", "but ", "rather than", "difference", "compare")):
+        result = {"type":"compare","left":{"label":"THE REACTION","title":"Automatic response","text":"The first impulse."},"right":{"label":"THE CHOICE","title":"Intentional response","text":"A more considered next step."},"tone":"coral"}
+    elif any(w in t for w in ("means", "called", "definition", "psychology", "pattern")):
+        result = {"type":"definition","term":"The pattern","text":"A repeated response that shapes how we think and act.","tone":"blue"}
+    elif visual:
+        result = {"type":"tag","text":PSYCHOLOGY_VISUALS[visual][0].replace("_"," ").upper(),"tone":"gold"}
+    else:
+        return None
+    if visual:
+        result.update({"visual":visual,"motion":"dynamic","artSize":174})
+    return result
 
 def infer_props(text: str) -> list[str]:
     t=text.lower()
@@ -115,7 +140,7 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
       "allowed_character_ids":CAST,
       "allowed_environments":PLACES,
       "allowed_actions":ACTIONS,
-      "allowed_sticker_types":sorted(STICKERS),
+      "allowed_sticker_types":sorted(STICKERS),\n      "allowed_psychology_visuals":sorted(PSYCHOLOGY_VISUALS),
       "allowed_props":sorted(PROPS),
       "rules":[
         "Use 2 to 7 distinct fixed characters across the entire video; at most 2 characters in any scene.",
