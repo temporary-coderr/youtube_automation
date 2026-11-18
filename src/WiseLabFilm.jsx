@@ -3,6 +3,8 @@ import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile,
 import {WISE_LAB_CAST} from "./wiseLabCast";
 import {StoryStickerLayer} from "./StoryStickerLayer";
 import {validateStoryShots} from "./storyRules";
+import {validateVisualDirection} from "./sceneDirector";
+import {GENERATED_SCENE_PLAN} from "./generatedScenePlan";
 
 /*
  * WISE-LAB — illustrated story film v2
@@ -389,7 +391,7 @@ function ParkBirds({frame=0}){
  </g>;
 }
 
-const shots = [
+const demoShots = [
  {place:"cafe",title:"THE MOMENT",caption:"A tiny awkward moment happens.",lead:{x:755,y:925,action:"gesture",talk:true},friend:{x:1390,y:930,action:"idle",talk:false},sticker:{type:"tag",text:"A MOMENT EVERYONE KNOWS",tone:"gold"},zoom:[1.0,1.055],pan:[0,-20]},
  {place:"cafe",title:"THE PAUSE",caption:"A pause lasts only a second.",lead:{x:765,y:925,action:"gesture",talk:true},friend:{x:1390,y:930,action:"turn",talk:true},zoom:[1.055,1.11],pan:[-20,-70],bubble:true},
  {place:"cafe",title:"THE EXIT",caption:"Then the other person moves on.",lead:{x:735,y:925,action:"idle"},friend:{x:0,y:930,action:"walk",walk:1,leave:true},zoom:[1.11,1.04],pan:[-70,40]},
@@ -407,7 +409,8 @@ const shots = [
  {place:"park",title:"WISE-LAB",caption:"You are more than one awkward moment.",lead:{x:1110,y:940,action:"idle"},zoom:[1.0,1.0],pan:[0,0],end:true}
 ];
 
-const validatedShots = validateStoryShots(shots);
+const shots = GENERATED_SCENE_PLAN.shots && GENERATED_SCENE_PLAN.shots.length ? GENERATED_SCENE_PLAN.shots : demoShots;
+const validatedShots = validateVisualDirection({shots}).shots;
 
 function CharacterPhoneInHand({x,y,frame}){
  return <Phone x={x} y={y} frame={frame} tilt={lerp(frame,0,119,-7,5)} screen/>
@@ -415,7 +418,8 @@ function CharacterPhoneInHand({x,y,frame}){
 
 function Shot({shot,index}){
  const f=useCurrentFrame();
- const local = Math.max(0,Math.min(119,f));
+ const shotDuration = shot.durationInFrames || 120;
+ const local = Math.max(0,Math.min(119,Math.round((f / Math.max(1,shotDuration - 1)) * 119)));
  const z=lerp(local,0,119,shot.zoom[0],shot.zoom[1]);
  const pan=lerp(local,0,119,shot.pan[0],shot.pan[1]);
  const fade=interpolate(local,[0,7,112,119],[0,1,1,0],clamp);
@@ -449,14 +453,14 @@ function Shot({shot,index}){
         {shot.memory && <MemoryPanel x={1280} y={255} frame={local} opacity={interpolate(local,[0,20,100,119],[0,.82,.82,0],clamp)}/>}
       </>}
       {isBedroom && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.08} talk={false}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.08} talk={false}/>
         <DeskProps frame={local} phone={true} faceDown={!!shot.phoneDown}/>
         {shot.place==="bedroom-phone" && shot.notify && <NotificationStack frame={local}/>}
         {shot.thought && <ThoughtLoop frame={local}/>}
         {shot.place==="bedroom-phone" && shot.lead.action==="phone" && <CharacterPhoneInHand x={890} y={555} frame={local}/>}
       </>}
       {shot.place==="park" && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
         {shot.birds && <ParkBirds frame={local}/>}
       </>}
       {shot.bubble && <g opacity={interpolate(local,[14,26,90,110],[0,1,1,0],clamp)}>
@@ -478,8 +482,8 @@ function Shot({shot,index}){
 }
 
 export const WiseLabFilm = () => <AbsoluteFill style={{background:"#101821"}}>
-  {validatedShots.map((shot,i)=><Sequence key={i} from={i*120} durationInFrames={120}><Shot shot={shot} index={i}/></Sequence>)}
-  <Sequence from={0} durationInFrames={1800}>
+  {validatedShots.map((shot,i)=><Sequence key={i} from={validatedShots.slice(0,i).reduce((sum,item)=>sum+(item.durationInFrames||120),0)} durationInFrames={shot.durationInFrames||120}><Shot shot={shot} index={i}/></Sequence>)}
+  <Sequence from={0} durationInFrames={GENERATED_SCENE_PLAN.durationInFrames || validatedShots.reduce((sum,item)=>sum+(item.durationInFrames||120),0)}>
     <Audio src={staticFile("narration.mp3")} volume={.96}/>
     <Audio src={staticFile("ambience.wav")} volume={.2}/>
   </Sequence>
