@@ -135,7 +135,7 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
             indexes=beat["sentence_indexes"]
             if not indexes or indexes != list(range(indexes[0], indexes[-1]+1)): return None
             ids=beat.get("characters",[])
-            if not 1 <= len(ids) <= 3 or any(x not in CAST for x in ids): return None
+            if not 1 <= len(ids) <= 2 or any(x not in CAST for x in ids): return None
             place=beat.get("place")
             if place not in PLACES: return None
             excerpt=" ".join(excerpts[i] for i in indexes)
