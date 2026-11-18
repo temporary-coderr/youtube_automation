@@ -3,6 +3,7 @@ import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile,
 import {WISE_LAB_CAST} from "./wiseLabCast";
 import {StoryStickerLayer} from "./StoryStickerLayer";
 import {ScenePropLayer} from "./ScenePropLayer";
+import {NarrationCaptionLayer} from "./NarrationCaptionLayer";
 import {validateStoryShots} from "./storyRules";
 import {validateVisualDirection} from "./sceneDirector";
 import {GENERATED_SCENE_PLAN} from "./generatedScenePlan";
@@ -476,7 +477,6 @@ function Shot({shot,index}){
    <StoryStickerLayer spec={shot.sticker}/>
    <div style={{position:"absolute",top:61,left:88,fontFamily:"Arial,sans-serif",fontWeight:700,fontSize:20,letterSpacing:5,color:"#e7c18e"}}>WISE-LAB <span style={{color:"#aab7bd",fontWeight:400,letterSpacing:3}}> / {shot.title}</span></div>
    <div style={{position:"absolute",left:0,right:0,bottom:0,height:202,background:"linear-gradient(180deg,rgba(10,17,25,0),rgba(10,17,25,.72))"}}/>
-   <div style={{position:"absolute",left:230,right:230,bottom:68,textAlign:"center",fontFamily:"Arial,sans-serif",fontSize:36,fontWeight:700,lineHeight:1.2,color:"#fff7e9",letterSpacing:.15,textShadow:"0 3px 12px rgba(0,0,0,.75)"}}>{shot.caption}</div>
    <div style={{position:"absolute",left:88,right:88,top:28,height:2,background:"rgba(237,224,202,.24)"}}/>
    <div style={{position:"absolute",left:88,top:28,width:lerp(local,0,119,4,99)+"%",height:2,background:"#e7ba79"}}/>
    {shot.end && <div style={{position:"absolute",right:100,bottom:28,fontFamily:"Arial,sans-serif",fontSize:18,letterSpacing:6,color:"#f4e9d7",opacity:.8}}>UNDERSTAND YOUR MIND</div>}
@@ -485,6 +485,7 @@ function Shot({shot,index}){
 
 export const WiseLabFilm = () => <AbsoluteFill style={{background:"#101821"}}>
   {validatedShots.map((shot,i)=><Sequence key={i} from={validatedShots.slice(0,i).reduce((sum,item)=>sum+(item.durationInFrames||120),0)} durationInFrames={shot.durationInFrames||120}><Shot shot={shot} index={i}/></Sequence>)}
+  <NarrationCaptionLayer />
   <Sequence from={0} durationInFrames={GENERATED_SCENE_PLAN.durationInFrames || validatedShots.reduce((sum,item)=>sum+(item.durationInFrames||120),0)}>
     <Audio src={staticFile("narration.mp3")} volume={.96}/>
     <Audio src={staticFile("ambience.wav")} volume={.2}/>
