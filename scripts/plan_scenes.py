@@ -152,10 +152,10 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
               "place":place,"title":f"SCENE {n+1:02d}","caption":excerpt[:112],"durationInFrames":duration,
               "lead":{"x":755,"y":925,"action":beat.get("lead_action","gesture") if beat.get("lead_action") in ACTIONS else "gesture","talk":False,"characterId":ids[0]},
               "friend":{"x":1390,"y":930,"action":beat.get("friend_action","idle") if beat.get("friend_action") in ACTIONS else "idle","talk":False,"characterId":ids[1]} if len(ids)>1 else None,
-              "sticker":sticker,"props":props,"zoom":[1.0,1.05],"pan":[0,-20],"camera":{"move":beat.get("camera","push-in")}
+              "sticker":sticker,"props":props,"zoom":zoom,"pan":pan,"camera":{"move":camera}
             })
         return {"version":1,"source":"creator-script","visualDirector":model,"shots":shots}
-    except (urllib.error.URLError, TimeoutError, KeyError, ValueError, TypeError, IndexError):
+    except (urllib.error.URLError, TimeoutError, KeyError, ValueError, TypeError, IndexError, AttributeError):
         return None
 
 def main():
