@@ -8,7 +8,8 @@ export function validateVisualDirection(plan) {
   for (const [index,shot] of plan.shots.entries()) {
     const place=shot.place||shot.environment;
     if(place&&!WISE_LAB_ASSETS.environments[place]) throw new Error("Scene "+index+" requests unknown environment '"+place+"'.");
-    for(const c of shot.characters||[]) {
+    const sceneCast = Array.isArray(shot.characters) ? shot.characters : [shot.lead && {...shot.lead,characterId:shot.lead.characterId||"alex"},shot.friend && {...shot.friend,characterId:shot.friend.characterId||"maya"}].filter(Boolean);
+    for(const c of sceneCast) {
       const id=c.characterId||c.id;
       if(!WISE_LAB_CAST[id]) throw new Error("Scene "+index+" requests unknown fixed character '"+id+"'.");
       ids.add(id);

@@ -7,8 +7,12 @@ on:
       - "assets/**"
       - "scripts/**"
       - "package.json"
+      - "requirements.txt"
       - ".github/workflows/wise-lab-cinematic-remotion.yml"
   workflow_dispatch:
+concurrency:
+  group: wise-lab-preview-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -17,43 +21,72 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+
+      # Reuse npm's download cache between preview runs. There is no lockfile
+      # in this repository yet, so key the cache from package.json.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: package.json
+
+      # Cache Python wheels/downloads (including edge-tts) between runs.
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install FFmpeg
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # GitHub's Ubuntu image often already contains FFmpeg. Avoid apt update
+      # entirely when the required binaries are present.
+      - name: Ensure FFmpeg and espeak-ng
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg espeak-ng
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v espeak-ng >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg espeak-ng
+          else
+            echo "FFmpeg and espeak-ng are already available on the runner."
+            ffmpeg -version | head -n 1
+            espeak-ng --version | head -n 1
+          fi
+
       - name: Install JavaScript dependencies
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --prefer-offline
+
       - name: Install Edge TTS
-        run: python -m pip install --no-cache-dir edge-tts
+        run: python -m pip install --prefer-binary edge-tts
+
+      - name: Test visual scene planner
+        run: python -m unittest discover -s scripts -p "test_*.py"
+
       - name: Plan visuals from the supplied script (never rewrite narration)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
         run: python scripts/plan_scenes.py
+
       - name: Generate narration and word-timed SRT
         run: |
           mkdir -p public out
           python scripts/generate_narration.py
           test -s public/narration.mp3
           test -s public/captions.srt
+
       - name: Create original ambient bed
         run: python scripts/make_ambience.py
+
       - name: Render illustrated story film
         run: npx remotion render src/index.jsx WiseLab out/wise-lab-illustrated-story.mp4 --codec h264 --crf 19 --log=error --concurrency=2
+
       - name: Validate MP4 and subtitle sidecar
         run: |
           test -s out/wise-lab-illustrated-story.mp4
           test -s public/captions.srt
           ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate -of json out/wise-lab-illustrated-story.mp4
           ffmpeg -v error -i out/wise-lab-illustrated-story.mp4 -f null -
+
       - name: Upload video and subtitles
         uses: actions/upload-artifact@v4
         with:

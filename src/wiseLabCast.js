@@ -8,7 +8,7 @@ export const WISE_LAB_CAST = Object.freeze({
   arthur: {id:"arthur", name:"Arthur", role:"elder perspective", ageBand:"elder", skin:"#c49a7e", skinShade:"#98735e", shirt:"#657b70", pants:"#39424b", hair:"#b8b9b2", silhouette:"silver-side-part", scale:0.98, ageStyle:"elder"},
 });
 export const CAST_RULES = Object.freeze({
-  minCharactersPerVideo: 2, maxCharactersPerVideo: 7, maxCharactersPerScene: 3,
+  minCharactersPerVideo: 2, maxCharactersPerVideo: 7, maxCharactersPerScene: 2,
   preferredRecurringCastSize: 6, allowNewCharacterByDefault: false,
   newCharacterReason: "Only add a new recurring character when the supplied story genuinely needs a role the existing cast cannot fulfil. Design and rig the character before production.",
 });

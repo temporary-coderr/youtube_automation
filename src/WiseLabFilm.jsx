@@ -2,6 +2,9 @@ import React from "react";
 import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile, Easing} from "remotion";
 import {WISE_LAB_CAST} from "./wiseLabCast";
 import {StoryStickerLayer} from "./StoryStickerLayer";
+import {ScenePropLayer} from "./ScenePropLayer";
+import {NarrationCaptionLayer} from "./NarrationCaptionLayer";
+import {OfficeSet, ClassroomSet, LibrarySet, LivingRoomSet} from "./EnvironmentLibrary";
 import {validateStoryShots} from "./storyRules";
 import {validateVisualDirection} from "./sceneDirector";
 import {GENERATED_SCENE_PLAN} from "./generatedScenePlan";
@@ -438,6 +441,10 @@ function Shot({shot,index}){
       {shot.place==="cafe"||shot.place==="cafe-alone" ? <CafeSet frame={local}/> :
        shot.place==="street" ? <StreetSet frame={local}/> :
        shot.place==="park" ? <ParkSet frame={local}/> :
+       shot.place==="office" ? <OfficeSet frame={local}/> :
+       shot.place==="classroom" ? <ClassroomSet frame={local}/> :
+       shot.place==="library" ? <LibrarySet frame={local}/> :
+       shot.place==="living-room" ? <LivingRoomSet frame={local}/> :
        <BedroomSet frame={local} dawn={shot.place==="bedroom-dawn"}/>}
       {shot.place==="cafe" && <>
         <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} talk={lead.talk} kind={lead.characterId || "alex"} s={1.03}/>
@@ -450,10 +457,12 @@ function Shot({shot,index}){
       </>}
       {shot.place==="street" && <>
         <CharacterRig x={lerp(local,0,119,lead.x-45,lead.x+55)} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.04} walkAmount={1}/>
+        {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.92} walkAmount={friend.walk||0}/>}
         {shot.memory && <MemoryPanel x={1280} y={255} frame={local} opacity={interpolate(local,[0,20,100,119],[0,.82,.82,0],clamp)}/>}
       </>}
       {isBedroom && <>
         <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.08} talk={false}/>
+        {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.9} walkAmount={friend.walk||0}/>}
         <DeskProps frame={local} phone={true} faceDown={!!shot.phoneDown}/>
         {shot.place==="bedroom-phone" && shot.notify && <NotificationStack frame={local}/>}
         {shot.thought && <ThoughtLoop frame={local}/>}
@@ -461,8 +470,14 @@ function Shot({shot,index}){
       </>}
       {shot.place==="park" && <>
         <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
+        {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.92} walkAmount={friend.walk||0}/>}
         {shot.birds && <ParkBirds frame={local}/>}
       </>}
+      {["office","classroom","library","living-room"].includes(shot.place) && <>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.04} walkAmount={lead.action==="walk"?1:0}/>
+        {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.92} walkAmount={friend.walk||0}/>}
+      </>}
+      <ScenePropLayer props={shot.props || []} frame={local} lead={lead} place={shot.place}/>
       {shot.bubble && <g opacity={interpolate(local,[14,26,90,110],[0,1,1,0],clamp)}>
         <path d="M990 240 Q990 210 1020 210 H1320 Q1350 210 1350 240 V323 Q1350 353 1320 353 H1085 L1040 392 L1052 353 H1020 Q990 353 990 323Z" fill="#eee8dc"/>
         <text x="1170" y="270" fontSize="29" fill="#273542" fontFamily="Georgia" textAnchor="middle" fontStyle="italic">"So... anyway."</text>
@@ -474,7 +489,6 @@ function Shot({shot,index}){
    <StoryStickerLayer spec={shot.sticker}/>
    <div style={{position:"absolute",top:61,left:88,fontFamily:"Arial,sans-serif",fontWeight:700,fontSize:20,letterSpacing:5,color:"#e7c18e"}}>WISE-LAB <span style={{color:"#aab7bd",fontWeight:400,letterSpacing:3}}> / {shot.title}</span></div>
    <div style={{position:"absolute",left:0,right:0,bottom:0,height:202,background:"linear-gradient(180deg,rgba(10,17,25,0),rgba(10,17,25,.72))"}}/>
-   <div style={{position:"absolute",left:230,right:230,bottom:68,textAlign:"center",fontFamily:"Arial,sans-serif",fontSize:36,fontWeight:700,lineHeight:1.2,color:"#fff7e9",letterSpacing:.15,textShadow:"0 3px 12px rgba(0,0,0,.75)"}}>{shot.caption}</div>
    <div style={{position:"absolute",left:88,right:88,top:28,height:2,background:"rgba(237,224,202,.24)"}}/>
    <div style={{position:"absolute",left:88,top:28,width:lerp(local,0,119,4,99)+"%",height:2,background:"#e7ba79"}}/>
    {shot.end && <div style={{position:"absolute",right:100,bottom:28,fontFamily:"Arial,sans-serif",fontSize:18,letterSpacing:6,color:"#f4e9d7",opacity:.8}}>UNDERSTAND YOUR MIND</div>}
@@ -483,6 +497,7 @@ function Shot({shot,index}){
 
 export const WiseLabFilm = () => <AbsoluteFill style={{background:"#101821"}}>
   {validatedShots.map((shot,i)=><Sequence key={i} from={validatedShots.slice(0,i).reduce((sum,item)=>sum+(item.durationInFrames||120),0)} durationInFrames={shot.durationInFrames||120}><Shot shot={shot} index={i}/></Sequence>)}
+  <NarrationCaptionLayer />
   <Sequence from={0} durationInFrames={GENERATED_SCENE_PLAN.durationInFrames || validatedShots.reduce((sum,item)=>sum+(item.durationInFrames||120),0)}>
     <Audio src={staticFile("narration.mp3")} volume={.96}/>
     <Audio src={staticFile("ambience.wav")} volume={.2}/>

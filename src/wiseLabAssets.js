@@ -3,10 +3,15 @@ export const WISE_LAB_ASSETS = Object.freeze({
   characters:["alex","maya","ethan","zoe","oliver","arthur"],
   environments:{
     cafe:{layers:["architecture","windows","lighting","furniture","foreground"],mood:"social / warm"},
+    "cafe-alone":{extends:"cafe",layers:["architecture","windows","lighting","furniture","foreground"],mood:"quiet / reflective"},
     street:{layers:["sky","distant-buildings","street-furniture","ground","atmosphere"],mood:"transition / reflective"},
     bedroom:{layers:["window","room-architecture","bedroom-furniture","lighting","foreground"],mood:"private / introspective"},
     "bedroom-phone":{extends:"bedroom",layers:["phone","notifications","screen-glow"],mood:"digital distraction"},
     "bedroom-dawn":{extends:"bedroom",lighting:"dawn",mood:"resolution"},
+    office:{layers:["windows","city-view","bookshelves","workstation","floor"],mood:"work / focus"},
+    classroom:{layers:["windows","chalkboard","desks","floor"],mood:"learning / group"},
+    library:{layers:["bookshelves","reading-tables","lighting","floor"],mood:"study / reflection"},
+    "living-room":{layers:["window","sofa","side-table","lamp","floor"],mood:"home / relationships"},
     park:{layers:["sky","distant-trees","midground-trees","path","foreground"],mood:"open / restorative"}
   },
   props:{
@@ -19,7 +24,7 @@ export const WISE_LAB_ASSETS = Object.freeze({
     lamp:{interaction:["switch-on","switch-off","adjust"],anchors:["desk","floor"]}
   },
   stickers:["tag","stat","definition","steps","quote","compare","diagram","timeline","callout"],
-  motionClips:["idle","gesture","walk","turn","reach","phone","think","sit","stand","grasp","put-down","walk-away"],
+  motionClips:["idle","gesture","walk","turn","reach","phone","think","sit"],
   cameraMoves:["locked","push-in","pull-back","tracking","pan-left","pan-right","over-shoulder","parallax"],
   transitions:["cut","cross-dissolve","match-move","whip-pan","foreground-wipe"]
 });
