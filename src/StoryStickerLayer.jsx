@@ -67,5 +67,31 @@ export function StoryStickerLayer({spec}) {
       <div style={{...body,fontSize:16}}>{item.text}</div>
     </div>)}
   </div>;
+  if (spec.type === "callout") return <div style={{...base,top:210,display:"flex",alignItems:"center",gap:16,maxWidth:560}}>
+    <div style={{width:7,height:72,borderRadius:8,background:p.accent,boxShadow:"0 0 22px "+p.accent}}/>
+    <div style={{...panel,position:"relative",left:"auto",top:"auto",padding:"17px 22px"}}>
+      <div style={eyebrow}>{spec.label || "NOTICE THIS"}</div>
+      <div style={{...heading,fontSize:26}}>{spec.title || spec.text}</div>
+      {spec.note && <div style={body}>{spec.note}</div>}
+    </div>
+  </div>;
+  if (spec.type === "diagram") return <div style={{...panel,top:185,maxWidth:650}}>
+    <div style={eyebrow}>{spec.label || "HOW IT CONNECTS"}</div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginTop:22}}>
+      {(spec.items || []).slice(0,3).map((item,i)=><React.Fragment key={i}>
+        <div style={{flex:1,minHeight:74,padding:"14px 10px",borderRadius:12,background:p.glow,border:"1px solid "+p.accent,display:"grid",placeItems:"center",textAlign:"center",fontSize:17,fontWeight:800}}>{item}</div>
+        {i < Math.min((spec.items || []).length,3)-1 && <span style={{color:p.accent,fontSize:24}}>→</span>}
+      </React.Fragment>)}
+    </div>
+  </div>;
+  if (spec.type === "timeline") return <div style={{...panel,top:205,maxWidth:650}}>
+    <div style={eyebrow}>{spec.label || "THE SEQUENCE"}</div>
+    <div style={{display:"flex",gap:12,marginTop:24}}>
+      {(spec.items || []).slice(0,4).map((item,i)=><div key={i} style={{flex:1,position:"relative",paddingTop:18,borderTop:"3px solid "+p.accent}}>
+        <span style={{position:"absolute",top:-9,left:0,width:14,height:14,borderRadius:20,background:p.accent,boxShadow:"0 0 14px "+p.accent}}/>
+        <div style={{fontSize:16,fontWeight:800,lineHeight:1.2}}>{item}</div>
+      </div>)}
+    </div>
+  </div>;
   return null;
 }
