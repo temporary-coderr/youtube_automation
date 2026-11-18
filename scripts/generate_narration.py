@@ -95,3 +95,4 @@ if __name__ == "__main__":
             lines += [str(i), f"{stamp(cursor)} --> {stamp(cursor + span)}", " ".join(group), ""]
             cursor += span
         SRT.write_text("\n".join(lines), encoding="utf-8")
+        write_caption_module()
