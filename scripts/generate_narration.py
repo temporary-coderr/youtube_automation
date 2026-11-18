@@ -40,6 +40,27 @@ def write_caption_module():
     module.write_text("export const GENERATED_CAPTIONS = "+json.dumps(captions,ensure_ascii=False,indent=2)+";\n",encoding="utf-8")
     print(f"Prepared {len(captions)} synchronized in-video captions")
 
+def sync_scene_duration():
+    """Fit the Remotion composition to the actual generated narration duration."""
+    import json, math
+    plan_path = ROOT / "src/generatedScenePlan.js"
+    raw = plan_path.read_text(encoding="utf-8")
+    prefix = "export const GENERATED_SCENE_PLAN = "
+    if not raw.startswith(prefix): return
+    plan = json.loads(raw[len(prefix):].strip().rstrip(";"))
+    if not plan.get("shots"): return
+    audio_seconds = float(subprocess.check_output(
+        ["ffprobe","-v","error","-show_entries","format=duration","-of","default=nw=1:nk=1",str(AUDIO)],
+        text=True
+    ).strip())
+    target_frames = max(1, math.ceil(audio_seconds * 30))
+    old_total = sum(s.get("durationInFrames", 90) for s in plan["shots"])
+    for shot in plan["shots"]:
+        shot["durationInFrames"] = max(90, round(shot.get("durationInFrames",90) * target_frames / max(1,old_total)))
+    plan["durationInFrames"] = sum(s["durationInFrames"] for s in plan["shots"])
+    plan_path.write_text(prefix + json.dumps(plan,ensure_ascii=False,indent=2) + ";\\n",encoding="utf-8")
+    print(f"Adjusted visual timeline to {audio_seconds:.1f}s of generated narration")
+
 async def generate():
     comm = edge_tts.Communicate(TEXT, VOICE, rate="-5%")
     words = []
@@ -75,6 +96,7 @@ async def generate():
         lines += [str(i), f"{stamp(group[0][0])} --> {stamp(group[-1][1] + 0.12)}", phrase.replace("\\N", "\n"), ""]
     SRT.write_text("\n".join(lines), encoding="utf-8")
     write_caption_module()
+    sync_scene_duration()
     print(f"Generated {AUDIO} and {SRT} from {len(words)} word timings")
 
 if __name__ == "__main__":
