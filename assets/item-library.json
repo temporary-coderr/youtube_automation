@@ -21,7 +21,7 @@
   },
   "environments": ["cafe","cafe-alone","street","bedroom","bedroom-phone","bedroom-dawn","park"],
   "sticker_types": ["tag","stat","definition","steps","quote","compare","diagram","timeline","callout"],
-  "motion_clips": ["idle","gesture","walk","turn","reach","phone","think","sit","stand","grasp","put-down","walk-away"],
+  "motion_clips": ["idle","gesture","walk","turn","reach","phone","think","sit"],
   "camera_moves": ["locked","push-in","pull-back","tracking","pan-left","pan-right","over-shoulder","parallax"],
   "transitions": ["cut","cross-dissolve","match-move","whip-pan","foreground-wipe"],
   "environment_layers": ["far_sky","distant_silhouette","midground_architecture","foreground_props","ground_plane","character","atmosphere"]
