@@ -452,10 +452,12 @@ function Shot({shot,index}){
       </>}
       {shot.place==="street" && <>
         <CharacterRig x={lerp(local,0,119,lead.x-45,lead.x+55)} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.04} walkAmount={1}/>
+        {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.92} walkAmount={friend.walk||0}/>}
         {shot.memory && <MemoryPanel x={1280} y={255} frame={local} opacity={interpolate(local,[0,20,100,119],[0,.82,.82,0],clamp)}/>}
       </>}
       {isBedroom && <>
         <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.08} talk={false}/>
+        {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.9} walkAmount={friend.walk||0}/>}
         <DeskProps frame={local} phone={true} faceDown={!!shot.phoneDown}/>
         {shot.place==="bedroom-phone" && shot.notify && <NotificationStack frame={local}/>}
         {shot.thought && <ThoughtLoop frame={local}/>}
@@ -463,6 +465,7 @@ function Shot({shot,index}){
       </>}
       {shot.place==="park" && <>
         <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
+        {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.92} walkAmount={friend.walk||0}/>}
         {shot.birds && <ParkBirds frame={local}/>}
       </>}
       <ScenePropLayer props={shot.props || []} frame={local} lead={lead} place={shot.place}/>
