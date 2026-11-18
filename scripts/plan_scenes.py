@@ -14,7 +14,8 @@ OUTPUT = ROOT / "src" / "generatedScenePlan.js"
 CAST = ["alex", "maya", "ethan", "zoe", "oliver", "arthur"]
 PLACES = ["cafe", "street", "bedroom", "bedroom-phone", "bedroom-dawn", "park"]
 ACTIONS = ["idle", "gesture", "walk", "turn", "reach", "phone", "think", "sit"]
-STICKERS = {"tag", "stat", "definition", "steps", "quote", "compare"}
+STICKERS = {"tag", "stat", "definition", "steps", "quote", "compare", "diagram", "timeline", "callout"}
+PROPS = {"phone", "notebook", "mug", "backpack", "chair", "book", "lamp"}
 
 def sentences_from_script(script: str) -> list[str]:
     # Sentence segmentation is for visual planning only; narration.txt remains untouched.
@@ -56,6 +57,17 @@ def infer_sticker(text: str, index: int):
         return {"type":"tag","text":"THE KEY IDEA","tone":"gold"}
     return None
 
+def infer_props(text: str) -> list[str]:
+    t=text.lower()
+    props=[]
+    if any(w in t for w in ("phone","notification","message","screen","scroll","text")): props.append("phone")
+    if any(w in t for w in ("write","notes","journal","plan","list")): props.append("notebook")
+    if any(w in t for w in ("coffee","tea","drink","cafe","cup")): props.append("mug")
+    if any(w in t for w in ("book","read","reading","learn")): props.append("book")
+    if any(w in t for w in ("bag","backpack","carry")): props.append("backpack")
+    if any(w in t for w in ("sit","chair","desk","work")): props.append("chair")
+    return props[:2]
+
 def make_fallback_plan(script: str) -> dict:
     sentences = sentences_from_script(script)
     if not sentences: raise ValueError("scripts/narration.txt is empty")
@@ -78,7 +90,7 @@ def make_fallback_plan(script: str) -> dict:
             "caption": excerpt[:112], "durationInFrames": duration,
             "lead": {"x": 755 if n % 2 == 0 else 850, "y": 925, "action": action, "talk": False, "characterId": pair[0]},
             "friend": {"x": 1390, "y": 930, "action": "idle" if n % 2 == 0 else "turn", "talk": False, "characterId": pair[1]},
-            "sticker": infer_sticker(excerpt, n),
+            "sticker": infer_sticker(excerpt, n), "props": infer_props(excerpt),
             "zoom": [1.0, 1.055 if n % 2 == 0 else 1.025], "pan": [0, -24 if n % 2 == 0 else 18],
             "camera": {"move":"push-in" if n % 2 == 0 else "tracking"},
         })
@@ -96,12 +108,13 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
       "allowed_environments":PLACES,
       "allowed_actions":ACTIONS,
       "allowed_sticker_types":sorted(STICKERS),
+      "allowed_props":sorted(PROPS),
       "rules":[
         "Use 2 to 7 distinct fixed characters across the entire video; at most 3 characters in any scene.",
         "A scene has one or two characters in lead/friend roles, chosen only from allowed IDs.",
         "Group adjacent sentence indexes into coherent visual beats. Every sentence index must appear exactly once, in original order.",
-        "Use a suitable environment, meaningful action, prop idea and optional concise explainer sticker only when it clarifies the script.",
-        "Return JSON only: {beats:[{sentence_indexes:[0],place:'cafe',characters:['alex','maya'],lead_action:'gesture',friend_action:'idle',sticker:null,camera:'push-in'}]}.",
+        "Use a suitable environment, meaningful action, and optional props from allowed_props. Use an explainer sticker only when it clarifies the script.",
+        "Return JSON only: {beats:[{sentence_indexes:[0],place:'cafe',characters:['alex','maya'],lead_action:'gesture',friend_action:'idle',props:['mug'],sticker:null,camera:'push-in'}]}.",
         "Do not create new characters, new narration, dialogue, statistics, research claims or text not present in the script."
       ]
     }
@@ -114,7 +127,7 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
         parsed=json.loads(raw)
         beats=parsed.get("beats",[])
         covered=[i for beat in beats for i in beat.get("sentence_indexes",[])]
-        if sorted(covered)!=list(range(len(excerpts))) or len(covered)!=len(set(covered)): return None
+        if covered!=list(range(len(excerpts))) or len(covered)!=len(set(covered)): return None
         used={c for beat in beats for c in beat.get("characters",[])}
         if not 2 <= len(used) <= 7 or not used.issubset(set(CAST)): return None
         shots=[]
@@ -128,12 +141,13 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
             excerpt=" ".join(excerpts[i] for i in indexes)
             sticker=beat.get("sticker")
             if sticker and sticker.get("type") not in STICKERS: sticker=None
+            props=[p for p in beat.get("props",[]) if p in PROPS][:3]
             duration=max(90,round(len(excerpt.split())*60*30/140))
             shots.append({
               "place":place,"title":f"SCENE {n+1:02d}","caption":excerpt[:112],"durationInFrames":duration,
               "lead":{"x":755,"y":925,"action":beat.get("lead_action","gesture") if beat.get("lead_action") in ACTIONS else "gesture","talk":False,"characterId":ids[0]},
               "friend":{"x":1390,"y":930,"action":beat.get("friend_action","idle") if beat.get("friend_action") in ACTIONS else "idle","talk":False,"characterId":ids[1]} if len(ids)>1 else None,
-              "sticker":sticker,"zoom":[1.0,1.05],"pan":[0,-20],"camera":{"move":beat.get("camera","push-in")}
+              "sticker":sticker,"props":props,"zoom":[1.0,1.05],"pan":[0,-20],"camera":{"move":beat.get("camera","push-in")}
             })
         return {"version":1,"source":"creator-script","visualDirector":model,"shots":shots}
     except (urllib.error.URLError, TimeoutError, KeyError, ValueError, TypeError, IndexError):
