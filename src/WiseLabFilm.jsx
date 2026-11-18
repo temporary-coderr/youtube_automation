@@ -2,6 +2,7 @@ import React from "react";
 import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile, Easing} from "remotion";
 import {WISE_LAB_CAST} from "./wiseLabCast";
 import {StoryStickerLayer} from "./StoryStickerLayer";
+import {validateStoryShots} from "./storyRules";
 
 /*
  * WISE-LAB — illustrated story film v2
@@ -395,6 +396,8 @@ const shots = [
  {place:"park",title:"WISE-LAB",caption:"You are more than one awkward moment.",lead:{x:1110,y:940,action:"idle"},zoom:[1.0,1.0],pan:[0,0],end:true}
 ];
 
+const validatedShots = validateStoryShots(shots);
+
 function CharacterPhoneInHand({x,y,frame}){
  return <Phone x={x} y={y} frame={frame} tilt={lerp(frame,0,119,-7,5)} screen/>
 }
@@ -464,7 +467,7 @@ function Shot({shot,index}){
 }
 
 export const WiseLabFilm = () => <AbsoluteFill style={{background:"#101821"}}>
-  {shots.map((shot,i)=><Sequence key={i} from={i*120} durationInFrames={120}><Shot shot={shot} index={i}/></Sequence>)}
+  {validatedShots.map((shot,i)=><Sequence key={i} from={i*120} durationInFrames={120}><Shot shot={shot} index={i}/></Sequence>)}
   <Sequence from={0} durationInFrames={1800}>
     <Audio src={staticFile("narration.mp3")} volume={.96}/>
     <Audio src={staticFile("ambience.wav")} volume={.2}/>
