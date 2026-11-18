@@ -19,6 +19,27 @@ def stamp(seconds):
     s, ms = divmod(ms, 1000)
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
+def write_caption_module():
+    """Expose exact SRT timings to Remotion for one in-video caption track."""
+    import json
+    blocks = re.split(r"\n\s*\n", SRT.read_text(encoding="utf-8").strip())
+    captions = []
+    def seconds(value):
+        hh, mm, tail = value.split(":")
+        ss, millis = tail.split(",")
+        return int(hh)*3600 + int(mm)*60 + int(ss) + int(millis)/1000
+    for block in blocks:
+        lines = [line.strip() for line in block.splitlines() if line.strip()]
+        timing = next((line for line in lines if " --> " in line), None)
+        if not timing: continue
+        start_text, end_text = timing.split(" --> ", 1)
+        phrase = " ".join(lines[lines.index(timing)+1:]).replace("\\N", " ").strip()
+        if phrase:
+            captions.append({"startFrame":round(seconds(start_text)*30),"endFrame":round(seconds(end_text)*30),"text":phrase})
+    module = ROOT / "src/generatedCaptions.js"
+    module.write_text("export const GENERATED_CAPTIONS = "+json.dumps(captions,ensure_ascii=False,indent=2)+";\\n",encoding="utf-8")
+    print(f"Prepared {len(captions)} synchronized in-video captions")
+
 async def generate():
     comm = edge_tts.Communicate(TEXT, VOICE, rate="-5%")
     words = []
@@ -53,6 +74,7 @@ async def generate():
             phrase = " ".join(x[2] for x in group[:mid]) + "\\N" + " ".join(x[2] for x in group[mid:])
         lines += [str(i), f"{stamp(group[0][0])} --> {stamp(group[-1][1] + 0.12)}", phrase.replace("\\N", "\n"), ""]
     SRT.write_text("\n".join(lines), encoding="utf-8")
+    write_caption_module()
     print(f"Generated {AUDIO} and {SRT} from {len(words)} word timings")
 
 if __name__ == "__main__":
