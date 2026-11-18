@@ -31,7 +31,7 @@ class ScenePlannerTests(unittest.TestCase):
     def test_each_scene_has_renderable_timing_and_environment(self):
         plan = make_fallback_plan("A friend starts a conversation. Later, they walk home.")
         self.assertTrue(all(s["durationInFrames"] >= 90 for s in plan["shots"]))
-        self.assertTrue(all(s["place"] in {"cafe","street","bedroom","bedroom-phone","bedroom-dawn","park"} for s in plan["shots"]))
+        self.assertTrue(all(s["place"] in {"cafe","street","bedroom","bedroom-phone","bedroom-dawn","park","office","classroom","library","living-room"} for s in plan["shots"]))
 
 if __name__ == "__main__":
     unittest.main()
