@@ -2,27 +2,242 @@
   "version": 2,
   "style": "original 2D cinematic vector; layered parallax; stable reusable character rigs; scene-specific art direction; no stock footage",
   "characters": {
-    "alex": {"name":"Alex","role":"main relatable lead","age_band":"young_adult","rig":"src/WiseLabFilm.jsx#CharacterRig","scale":1.0,"palette":{"skin":"#b9785d","shirt":"#26384c","pants":"#182333","hair":"#15171d"}},
-    "maya": {"name":"Maya","role":"friend / contrasting perspective","age_band":"young_adult","rig":"src/WiseLabFilm.jsx#CharacterRig","scale":0.98,"palette":{"skin":"#d09a79","shirt":"#b77a43","pants":"#27364a","hair":"#211b1a"}},
-    "ethan": {"name":"Ethan","role":"friend / challenger","age_band":"young_adult","rig":"src/WiseLabFilm.jsx#CharacterRig","scale":1.01,"palette":{"skin":"#9b684f","shirt":"#47766f","pants":"#202b39","hair":"#17191f"}},
-    "zoe": {"name":"Zoe","role":"grounded perspective","age_band":"young_adult","rig":"src/WiseLabFilm.jsx#CharacterRig","scale":0.98,"palette":{"skin":"#c58c6d","shirt":"#8b668f","pants":"#303047","hair":"#28202a"}},
-    "oliver": {"name":"Oliver","role":"child perspective","age_band":"child","rig":"src/WiseLabFilm.jsx#CharacterRig","scale":0.78,"palette":{"skin":"#c58b6b","shirt":"#4c86a2","pants":"#34465c","hair":"#30251f"}},
-    "arthur": {"name":"Arthur","role":"elder perspective","age_band":"elder","rig":"src/WiseLabFilm.jsx#CharacterRig","scale":0.98,"palette":{"skin":"#c49a7e","shirt":"#657b70","pants":"#39424b","hair":"#b8b9b2"}}
+    "alex": {
+      "name": "Alex",
+      "role": "main relatable lead",
+      "age_band": "young_adult",
+      "rig": "src/WiseLabFilm.jsx#CharacterRig",
+      "scale": 1,
+      "palette": {
+        "skin": "#b9785d",
+        "shirt": "#26384c",
+        "pants": "#182333",
+        "hair": "#15171d"
+      }
+    },
+    "maya": {
+      "name": "Maya",
+      "role": "friend / contrasting perspective",
+      "age_band": "young_adult",
+      "rig": "src/WiseLabFilm.jsx#CharacterRig",
+      "scale": 0.98,
+      "palette": {
+        "skin": "#d09a79",
+        "shirt": "#b77a43",
+        "pants": "#27364a",
+        "hair": "#211b1a"
+      }
+    },
+    "ethan": {
+      "name": "Ethan",
+      "role": "friend / challenger",
+      "age_band": "young_adult",
+      "rig": "src/WiseLabFilm.jsx#CharacterRig",
+      "scale": 1.01,
+      "palette": {
+        "skin": "#9b684f",
+        "shirt": "#47766f",
+        "pants": "#202b39",
+        "hair": "#17191f"
+      }
+    },
+    "zoe": {
+      "name": "Zoe",
+      "role": "grounded perspective",
+      "age_band": "young_adult",
+      "rig": "src/WiseLabFilm.jsx#CharacterRig",
+      "scale": 0.98,
+      "palette": {
+        "skin": "#c58c6d",
+        "shirt": "#8b668f",
+        "pants": "#303047",
+        "hair": "#28202a"
+      }
+    },
+    "oliver": {
+      "name": "Oliver",
+      "role": "child perspective",
+      "age_band": "child",
+      "rig": "src/WiseLabFilm.jsx#CharacterRig",
+      "scale": 0.78,
+      "palette": {
+        "skin": "#c58b6b",
+        "shirt": "#4c86a2",
+        "pants": "#34465c",
+        "hair": "#30251f"
+      }
+    },
+    "arthur": {
+      "name": "Arthur",
+      "role": "elder perspective",
+      "age_band": "elder",
+      "rig": "src/WiseLabFilm.jsx#CharacterRig",
+      "scale": 0.98,
+      "palette": {
+        "skin": "#c49a7e",
+        "shirt": "#657b70",
+        "pants": "#39424b",
+        "hair": "#b8b9b2"
+      }
+    }
   },
-  "cast_constraints": {"minimum_per_video":2,"maximum_per_video":7,"maximum_per_scene":2,"new_characters_require_design_and_rig_approval":true},
+  "cast_constraints": {
+    "minimum_per_video": 2,
+    "maximum_per_video": 7,
+    "maximum_per_scene": 2,
+    "new_characters_require_design_and_rig_approval": true
+  },
   "props": {
-    "phone":{"renderer":"src/ScenePropLayer.jsx","interactions":["pick-up","hold","look-at","put-down"],"anchors":["hand","desk"]},
-    "notebook":{"renderer":"src/ScenePropLayer.jsx","interactions":["pick-up","open","write","close"],"anchors":["hand","desk","lap"]},
-    "mug":{"renderer":"src/ScenePropLayer.jsx","interactions":["pick-up","hold","put-down"],"anchors":["hand","table"]},
-    "backpack":{"renderer":"src/ScenePropLayer.jsx","interactions":["wear","remove","carry","put-down"]},
-    "book":{"renderer":"src/ScenePropLayer.jsx","interactions":["pick-up","open","read","close"]},
-    "lamp":{"renderer":"src/ScenePropLayer.jsx","interactions":["switch-on","switch-off","adjust"]},
-    "chair":{"renderer":"src/ScenePropLayer.jsx","interactions":["sit","stand"]}
+    "phone": {
+      "renderer": "src/ScenePropLayer.jsx",
+      "interactions": [
+        "pick-up",
+        "hold",
+        "look-at",
+        "put-down"
+      ],
+      "anchors": [
+        "hand",
+        "desk"
+      ]
+    },
+    "notebook": {
+      "renderer": "src/ScenePropLayer.jsx",
+      "interactions": [
+        "pick-up",
+        "open",
+        "write",
+        "close"
+      ],
+      "anchors": [
+        "hand",
+        "desk",
+        "lap"
+      ]
+    },
+    "mug": {
+      "renderer": "src/ScenePropLayer.jsx",
+      "interactions": [
+        "pick-up",
+        "hold",
+        "put-down"
+      ],
+      "anchors": [
+        "hand",
+        "table"
+      ]
+    },
+    "backpack": {
+      "renderer": "src/ScenePropLayer.jsx",
+      "interactions": [
+        "wear",
+        "remove",
+        "carry",
+        "put-down"
+      ]
+    },
+    "book": {
+      "renderer": "src/ScenePropLayer.jsx",
+      "interactions": [
+        "pick-up",
+        "open",
+        "read",
+        "close"
+      ]
+    },
+    "lamp": {
+      "renderer": "src/ScenePropLayer.jsx",
+      "interactions": [
+        "switch-on",
+        "switch-off",
+        "adjust"
+      ]
+    },
+    "chair": {
+      "renderer": "src/ScenePropLayer.jsx",
+      "interactions": [
+        "sit",
+        "stand"
+      ]
+    }
   },
-  "environments": ["cafe","cafe-alone","street","bedroom","bedroom-phone","bedroom-dawn","park","office","classroom","library","living-room"],
-  "sticker_types": ["tag","stat","definition","steps","quote","compare","diagram","timeline","callout"],
-  "motion_clips": ["idle","gesture","walk","turn","reach","phone","think","sit"],
-  "camera_moves": ["locked","push-in","pull-back","tracking","pan-left","pan-right","over-shoulder","parallax"],
-  "transitions": ["cut","cross-dissolve","match-move","whip-pan","foreground-wipe"],
-  "environment_layers": ["far_sky","distant_silhouette","midground_architecture","foreground_props","ground_plane","character","atmosphere"]
+  "environments": [
+    "cafe",
+    "cafe-alone",
+    "street",
+    "bedroom",
+    "bedroom-phone",
+    "bedroom-dawn",
+    "park",
+    "office",
+    "classroom",
+    "library",
+    "living-room"
+  ],
+  "sticker_types": [
+    "tag",
+    "stat",
+    "definition",
+    "steps",
+    "quote",
+    "compare",
+    "diagram",
+    "timeline",
+    "callout"
+  ],
+  "motion_clips": [
+    "idle",
+    "gesture",
+    "walk",
+    "turn",
+    "reach",
+    "phone",
+    "think",
+    "sit"
+  ],
+  "camera_moves": [
+    "locked",
+    "push-in",
+    "pull-back",
+    "tracking",
+    "pan-left",
+    "pan-right",
+    "over-shoulder",
+    "parallax"
+  ],
+  "transitions": [
+    "cut",
+    "cross-dissolve",
+    "match-move",
+    "whip-pan",
+    "foreground-wipe"
+  ],
+  "environment_layers": [
+    "far_sky",
+    "distant_silhouette",
+    "midground_architecture",
+    "foreground_props",
+    "ground_plane",
+    "character",
+    "atmosphere"
+  ],
+  "psychology_stickers": [
+    "thought_loop",
+    "attention_trap",
+    "social_mirror",
+    "boundary_shield",
+    "focus_spotlight",
+    "habit_cycle",
+    "memory_web",
+    "stress_meter",
+    "confidence_ladder",
+    "emotional_wave",
+    "decision_fork",
+    "sleep_rhythm"
+  ],
+  "sticker_motion_modes": [
+    "static",
+    "dynamic"
+  ],
+  "sticker_selection": "script-concept matching; visual metaphor plus existing explanatory sticker type"
 }
