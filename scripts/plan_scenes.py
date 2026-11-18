@@ -35,7 +35,11 @@ def groups_for(sentences: list[str], max_words: int = 24) -> list[list[int]]:
 def infer_place(text: str, index: int) -> str:
     t = text.lower()
     if any(w in t for w in ("phone", "notification", "message", "scroll", "screen", "text")): return "bedroom-phone"
-    if any(w in t for w in ("sleep", "bed", "night", "alone", "room", "midnight")): return "bedroom"
+    if any(w in t for w in ("school", "classroom", "teacher", "student", "lesson")): return "classroom"
+    if any(w in t for w in ("office", "workplace", "meeting", "colleague", "laptop", "deadline")): return "office"
+    if any(w in t for w in ("library", "book", "reading", "study", "research")): return "library"
+    if any(w in t for w in ("living room", "family", "sofa", "parent", "house", "at home")): return "living-room"
+    if any(w in t for w in ("sleep", "bed", "night", "alone", "bedroom", "midnight")): return "bedroom"
     if any(w in t for w in ("morning", "dawn", "wake", "tomorrow", "new day")): return "bedroom-dawn"
     if any(w in t for w in ("walk", "street", "commute", "outside", "leave")): return "street"
     if any(w in t for w in ("office", "workplace", "meeting", "colleague", "laptop", "deadline")): return "office"
