@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "narration.txt"
 OUTPUT = ROOT / "src" / "generatedScenePlan.js"
 CAST = ["alex", "maya", "ethan", "zoe", "oliver", "arthur"]
-PLACES = ["cafe", "street", "bedroom", "bedroom-phone", "bedroom-dawn", "park"]
+PLACES = ["cafe", "street", "bedroom", "bedroom-phone", "bedroom-dawn", "park", "office", "classroom", "library", "living-room"]
 ACTIONS = ["idle", "gesture", "walk", "turn", "reach", "phone", "think", "sit"]
 STICKERS = {"tag", "stat", "definition", "steps", "quote", "compare", "diagram", "timeline", "callout"}
 PROPS = {"phone", "notebook", "mug", "backpack", "chair", "book", "lamp"}
@@ -37,7 +37,11 @@ def infer_place(text: str, index: int) -> str:
     if any(w in t for w in ("phone", "notification", "message", "scroll", "screen", "text")): return "bedroom-phone"
     if any(w in t for w in ("sleep", "bed", "night", "alone", "room", "midnight")): return "bedroom"
     if any(w in t for w in ("morning", "dawn", "wake", "tomorrow", "new day")): return "bedroom-dawn"
-    if any(w in t for w in ("walk", "street", "home", "commute", "outside", "leave")): return "street"
+    if any(w in t for w in ("walk", "street", "commute", "outside", "leave")): return "street"
+    if any(w in t for w in ("office", "workplace", "meeting", "colleague", "laptop", "deadline")): return "office"
+    if any(w in t for w in ("school", "classroom", "teacher", "student", "lesson")): return "classroom"
+    if any(w in t for w in ("library", "book", "reading", "study", "research")): return "library"
+    if any(w in t for w in ("living room", "family", "sofa", "parent", "house", "at home")): return "living-room"
     if any(w in t for w in ("park", "calm", "present", "breathe", "nature", "move on")): return "park"
     if any(w in t for w in ("friend", "conversation", "people", "social", "awkward", "someone", "relationship")): return "cafe"
     return ["cafe", "street", "bedroom", "park"][index % 4]
