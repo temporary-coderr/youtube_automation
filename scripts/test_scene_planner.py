@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from plan_scenes import make_fallback_plan, sentences_from_script, infer_props, infer_place
+from plan_scenes import make_fallback_plan, sentences_from_script, infer_props, infer_place, infer_psychology_visual, infer_sticker
 
 class ScenePlannerTests(unittest.TestCase):
     def test_visual_plan_uses_two_to_seven_fixed_characters(self):
@@ -29,6 +29,19 @@ class ScenePlannerTests(unittest.TestCase):
         self.assertEqual(infer_place("The team gathers in the office.", 0), "office")
         self.assertEqual(infer_place("She studies in the library.", 0), "library")
         self.assertEqual(infer_place("The family sits on the sofa at home.", 0), "living-room")
+
+    def test_psychology_visuals_are_concept_specific(self):
+        self.assertEqual(infer_psychology_visual("He keeps replaying the same thought and overthinking it."), "thought_loop")
+        self.assertEqual(infer_psychology_visual("A notification interrupts her attention."), "attention_trap")
+        self.assertEqual(infer_psychology_visual("She compares her life to everyone else on social media."), "social_mirror")
+        self.assertEqual(infer_psychology_visual("He practises saying no and setting a boundary."), "boundary_shield")
+        self.assertEqual(infer_psychology_visual("A cue triggers the same routine and reward."), "habit_cycle")
+
+    def test_sticker_has_dynamic_visual_metadata(self):
+        sticker = infer_sticker("He keeps replaying the same thought.", 0)
+        self.assertEqual(sticker["visual"], "thought_loop")
+        self.assertEqual(sticker["motion"], "dynamic")
+        self.assertEqual(sticker["artSize"], 174)
 
     def test_empty_script_is_rejected(self):
         with self.assertRaises(ValueError):
