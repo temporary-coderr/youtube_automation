@@ -37,7 +37,7 @@ def write_caption_module():
         if phrase:
             captions.append({"startFrame":round(seconds(start_text)*30),"endFrame":round(seconds(end_text)*30),"text":phrase})
     module = ROOT / "src/generatedCaptions.js"
-    module.write_text("export const GENERATED_CAPTIONS = "+json.dumps(captions,ensure_ascii=False,indent=2)+";\\n",encoding="utf-8")
+    module.write_text("export const GENERATED_CAPTIONS = "+json.dumps(captions,ensure_ascii=False,indent=2)+";\n",encoding="utf-8")
     print(f"Prepared {len(captions)} synchronized in-video captions")
 
 async def generate():
