@@ -110,7 +110,7 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
       "allowed_sticker_types":sorted(STICKERS),
       "allowed_props":sorted(PROPS),
       "rules":[
-        "Use 2 to 7 distinct fixed characters across the entire video; at most 3 characters in any scene.",
+        "Use 2 to 7 distinct fixed characters across the entire video; at most 2 characters in any scene.",
         "A scene has one or two characters in lead/friend roles, chosen only from allowed IDs.",
         "Group adjacent sentence indexes into coherent visual beats. Every sentence index must appear exactly once, in original order.",
         "Use a suitable environment, meaningful action, and optional props from allowed_props. Use an explainer sticker only when it clarifies the script.",
