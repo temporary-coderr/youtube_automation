@@ -99,7 +99,7 @@ def make_fallback_plan(script: str) -> dict:
 def request_gemini_plan(script: str, fallback: dict) -> dict | None:
     key = os.getenv("GEMINI_API_KEY")
     if not key: return None
-    model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    model = os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"
     excerpts = sentences_from_script(script)
     prompt = {
       "task":"Create visual direction for an already-written narration. Do not write, rewrite, summarize, add, remove, or reorder spoken words.",
@@ -141,6 +141,11 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
             excerpt=" ".join(excerpts[i] for i in indexes)
             sticker=beat.get("sticker")
             if sticker and sticker.get("type") not in STICKERS: sticker=None
+            required = {"tag":["text"],"stat":["value"],"definition":["term","text"],"steps":["items"],"quote":["text"],"compare":["left","right"],"diagram":["items"],"timeline":["items"],"callout":["title"]}
+            if sticker and any(not sticker.get(field) for field in required.get(sticker["type"],[])): sticker=None
+            if sticker and sticker.get("type")=="stat" and not any(str(n) in str(sticker.get("value","")) for n in re.findall(r"\d+(?:\.\d+)?%?",excerpt)):
+                sticker=None
+            if sticker is None: sticker=infer_sticker(excerpt,n)
             props=[p for p in beat.get("props",[]) if p in PROPS][:3]
             duration=max(90,round(len(excerpt.split())*60*30/140))
             shots.append({
