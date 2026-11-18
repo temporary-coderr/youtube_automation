@@ -9,7 +9,7 @@
     "oliver": {"name":"Oliver","role":"child perspective","age_band":"child","rig":"src/WiseLabFilm.jsx#CharacterRig","scale":0.78,"palette":{"skin":"#c58b6b","shirt":"#4c86a2","pants":"#34465c","hair":"#30251f"}},
     "arthur": {"name":"Arthur","role":"elder perspective","age_band":"elder","rig":"src/WiseLabFilm.jsx#CharacterRig","scale":0.98,"palette":{"skin":"#c49a7e","shirt":"#657b70","pants":"#39424b","hair":"#b8b9b2"}}
   },
-  "cast_constraints": {"minimum_per_video":2,"maximum_per_video":7,"maximum_per_scene":3,"new_characters_require_design_and_rig_approval":true},
+  "cast_constraints": {"minimum_per_video":2,"maximum_per_video":7,"maximum_per_scene":2,"new_characters_require_design_and_rig_approval":true},
   "props": {
     "phone":{"renderer":"src/ScenePropLayer.jsx","interactions":["pick-up","hold","look-at","put-down"],"anchors":["hand","desk"]},
     "notebook":{"renderer":"src/ScenePropLayer.jsx","interactions":["pick-up","open","write","close"],"anchors":["hand","desk","lap"]},
