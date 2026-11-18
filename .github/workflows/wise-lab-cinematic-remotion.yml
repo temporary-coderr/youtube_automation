@@ -1,7 +1,7 @@
 name: WISE-LAB Cinematic Preview
 on:
   push:
-    branches: [wise-lab-cinematic-v1]
+    branches: [wise-lab-cinematic-v1, feat/wise-lab-small-cast-story-engine]
     paths:
       - "src/**"
       - "scripts/**"

@@ -1,5 +1,8 @@
 import React from "react";
 import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile, Easing} from "remotion";
+import {WISE_LAB_CAST} from "./wiseLabCast";
+import {StoryStickerLayer} from "./StoryStickerLayer";
+import {validateStoryShots} from "./storyRules";
 
 /*
  * WISE-LAB — illustrated story film v2
@@ -18,12 +21,14 @@ const lerp = (f,a,b,x,y) => interpolate(f,[a,b],[x,y],{...clamp,easing:ease});
 const pulse = (f,s=1) => (Math.sin(f*.12)*.5+.5)*s;
 
 function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=1,walkAmount=0,talk=false}){
-  const lead = kind==="lead";
-  const skin = lead ? "#b9785d" : "#d09a79";
-  const skinShade = lead ? "#925d4c" : "#a8755e";
-  const shirt = lead ? "#26384c" : "#b77a43";
-  const pants = lead ? "#182333" : "#27364a";
-  const hair = lead ? "#15171d" : "#211b1a";
+  const castId = kind === "friend" ? "maya" : kind;
+  const profile = WISE_LAB_CAST[castId] || WISE_LAB_CAST.arjun;
+  const lead = castId === "arjun";
+  const skin = profile.skin;
+  const skinShade = profile.skinShade;
+  const shirt = profile.shirt;
+  const pants = profile.pants;
+  const hair = profile.hair;
   const gait = Math.sin(frame*.17);
   const walkTravel = walkAmount ? lerp(frame,0,119,0,176*walkAmount) : 0;
   const bob = walkAmount ? Math.abs(gait)*11 : Math.sin(frame*.055)*2.8;
@@ -374,22 +379,24 @@ function ParkBirds({frame=0}){
 }
 
 const shots = [
- {place:"cafe",title:"THE MOMENT",caption:"A tiny awkward moment happens.",lead:{x:755,y:925,action:"gesture",talk:true},friend:{x:1390,y:930,action:"idle",talk:false},zoom:[1.0,1.055],pan:[0,-20]},
+ {place:"cafe",title:"THE MOMENT",caption:"A tiny awkward moment happens.",lead:{x:755,y:925,action:"gesture",talk:true},friend:{x:1390,y:930,action:"idle",talk:false},sticker:{type:"tag",text:"A MOMENT EVERYONE KNOWS",tone:"gold"},zoom:[1.0,1.055],pan:[0,-20]},
  {place:"cafe",title:"THE PAUSE",caption:"A pause lasts only a second.",lead:{x:765,y:925,action:"gesture",talk:true},friend:{x:1390,y:930,action:"turn",talk:true},zoom:[1.055,1.11],pan:[-20,-70],bubble:true},
  {place:"cafe",title:"THE EXIT",caption:"Then the other person moves on.",lead:{x:735,y:925,action:"idle"},friend:{x:0,y:930,action:"walk",walk:1,leave:true},zoom:[1.11,1.04],pan:[-70,40]},
- {place:"cafe-alone",title:"THE REPLAY",caption:"But your mind keeps the moment.",lead:{x:760,y:925,action:"think"},zoom:[1.03,1.12],pan:[20,-60],memory:true},
+ {place:"cafe-alone",title:"THE REPLAY",caption:"But your mind keeps the moment.",lead:{x:760,y:925,action:"think"},sticker:{type:"definition",term:"Rumination",text:"When the mind repeatedly circles the same thought without moving toward a solution.",tone:"blue"},zoom:[1.03,1.12],pan:[20,-60],memory:true},
  {place:"street",title:"ON THE WAY HOME",caption:"It follows you long after you leave.",lead:{x:875,y:940,action:"walk",walk:1},zoom:[1.0,1.07],pan:[0,-80],memory:true},
  {place:"bedroom",title:"LATE AT NIGHT",caption:"Hours later, it comes back.",lead:{x:775,y:940,action:"sit"},zoom:[1.0,1.045],pan:[0,-35]},
- {place:"bedroom",title:"THE LOOP",caption:"You replay what you should have said.",lead:{x:765,y:940,action:"think"},zoom:[1.045,1.13],pan:[-25,-85],thought:true},
+ {place:"bedroom",title:"THE LOOP",caption:"You replay what you should have said.",lead:{x:765,y:940,action:"think"},sticker:{type:"compare",left:{label:"WHAT HAPPENED",title:"One moment",text:"A brief event in real life."},right:{label:"WHAT THE MIND DOES",title:"Endless replay",text:"The same moment gets repeated."},tone:"coral"},zoom:[1.045,1.13],pan:[-25,-85],thought:true},
  {place:"bedroom-phone",title:"THE CHECK",caption:"Then you reach for your phone.",lead:{x:760,y:940,action:"reach"},zoom:[1.08,1.13],pan:[-35,-90],notify:true},
  {place:"bedroom-phone",title:"ONE MORE LOOK",caption:"You check the conversation again.",lead:{x:760,y:940,action:"phone"},zoom:[1.13,1.2],pan:[-70,-125],notify:true},
- {place:"bedroom-phone",title:"THE FEEDBACK LOOP",caption:"Your attention feeds the loop.",lead:{x:760,y:940,action:"think"},zoom:[1.2,1.1],pan:[-105,-45],thought:true,notify:true},
+ {place:"bedroom-phone",title:"THE FEEDBACK LOOP",caption:"Your attention feeds the loop.",lead:{x:760,y:940,action:"think"},sticker:{type:"steps",label:"BREAK THE LOOP",title:"Try a small reset",items:["Name the thought","Separate fact from guess","Return to the next action"],tone:"mint"},zoom:[1.2,1.1],pan:[-105,-45],thought:true,notify:true},
  {place:"bedroom-phone",title:"THE REALIZATION",caption:"Replaying is not the same as learning.",lead:{x:760,y:940,action:"reach"},zoom:[1.1,1.04],pan:[-45,10],phoneDown:true},
  {place:"bedroom-dawn",title:"A DIFFERENT RESPONSE",caption:"Name the thought. Don't argue with it.",lead:{x:1080,y:940,action:"turn"},zoom:[1.04,1.0],pan:[40,0]},
- {place:"park",title:"BACK TO THE PRESENT",caption:"Take the lesson. Let the rest pass.",lead:{x:730,y:940,action:"walk",walk:1},zoom:[1.0,1.04],pan:[0,-30],birds:true},
+ {place:"park",title:"BACK TO THE PRESENT",caption:"Take the lesson. Let the rest pass.",lead:{x:730,y:940,action:"walk",walk:1},sticker:{type:"quote",text:"A thought can be noticed without being followed.",source:"A practical reminder",tone:"gold"},zoom:[1.0,1.04],pan:[0,-30],birds:true},
  {place:"park",title:"KEEP MOVING",caption:"Bring your attention back to now.",lead:{x:1110,y:940,action:"walk",walk:1},zoom:[1.04,1.0],pan:[-30,0],birds:true},
  {place:"park",title:"WISE-LAB",caption:"You are more than one awkward moment.",lead:{x:1110,y:940,action:"idle"},zoom:[1.0,1.0],pan:[0,0],end:true}
 ];
+
+const validatedShots = validateStoryShots(shots);
 
 function CharacterPhoneInHand({x,y,frame}){
  return <Phone x={x} y={y} frame={frame} tilt={lerp(frame,0,119,-7,5)} screen/>
@@ -418,27 +425,27 @@ function Shot({shot,index}){
        shot.place==="park" ? <ParkSet frame={local}/> :
        <BedroomSet frame={local} dawn={shot.place==="bedroom-dawn"}/>}
       {shot.place==="cafe" && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} talk={lead.talk} s={1.03}/>
-        {friend && <CharacterRig x={leaveX} y={friend.y} frame={local} action={friend.action} talk={friend.talk} kind="friend" s={.94} walkAmount={friend.walk||0}/>}
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} talk={lead.talk} kind={lead.characterId || "arjun"} s={1.03}/>
+        {friend && <CharacterRig x={leaveX} y={friend.y} frame={local} action={friend.action} talk={friend.talk} kind={friend.characterId || "maya"} s={.94} walkAmount={friend.walk||0}/>}
         <CafeForeground frame={local} alone={false}/>
       </>}
       {shot.place==="cafe-alone" && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} s={1.08}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.08}/>
         <CafeForeground frame={local} alone={true}/>
       </>}
       {shot.place==="street" && <>
-        <CharacterRig x={lerp(local,0,119,lead.x-45,lead.x+55)} y={lead.y} frame={local} action={lead.action} s={1.04} walkAmount={1}/>
+        <CharacterRig x={lerp(local,0,119,lead.x-45,lead.x+55)} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.04} walkAmount={1}/>
         {shot.memory && <MemoryPanel x={1280} y={255} frame={local} opacity={interpolate(local,[0,20,100,119],[0,.82,.82,0],clamp)}/>}
       </>}
       {isBedroom && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} s={1.08} talk={false}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.08} talk={false}/>
         <DeskProps frame={local} phone={true} faceDown={!!shot.phoneDown}/>
         {shot.place==="bedroom-phone" && shot.notify && <NotificationStack frame={local}/>}
         {shot.thought && <ThoughtLoop frame={local}/>}
         {shot.place==="bedroom-phone" && shot.lead.action==="phone" && <CharacterPhoneInHand x={890} y={555} frame={local}/>}
       </>}
       {shot.place==="park" && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
         {shot.birds && <ParkBirds frame={local}/>}
       </>}
       {shot.bubble && <g opacity={interpolate(local,[14,26,90,110],[0,1,1,0],clamp)}>
@@ -449,6 +456,7 @@ function Shot({shot,index}){
     <rect width={W} height={H} fill="url(#filmVignette)"/>
     <ellipse cx="980" cy="475" rx="900" ry="540" fill="url(#focusGlow)" opacity=".5"/>
    </svg>
+   <StoryStickerLayer spec={shot.sticker}/>
    <div style={{position:"absolute",top:61,left:88,fontFamily:"Arial,sans-serif",fontWeight:700,fontSize:20,letterSpacing:5,color:"#e7c18e"}}>WISE-LAB <span style={{color:"#aab7bd",fontWeight:400,letterSpacing:3}}> / {shot.title}</span></div>
    <div style={{position:"absolute",left:0,right:0,bottom:0,height:202,background:"linear-gradient(180deg,rgba(10,17,25,0),rgba(10,17,25,.72))"}}/>
    <div style={{position:"absolute",left:230,right:230,bottom:68,textAlign:"center",fontFamily:"Arial,sans-serif",fontSize:36,fontWeight:700,lineHeight:1.2,color:"#fff7e9",letterSpacing:.15,textShadow:"0 3px 12px rgba(0,0,0,.75)"}}>{shot.caption}</div>
@@ -459,7 +467,7 @@ function Shot({shot,index}){
 }
 
 export const WiseLabFilm = () => <AbsoluteFill style={{background:"#101821"}}>
-  {shots.map((shot,i)=><Sequence key={i} from={i*120} durationInFrames={120}><Shot shot={shot} index={i}/></Sequence>)}
+  {validatedShots.map((shot,i)=><Sequence key={i} from={i*120} durationInFrames={120}><Shot shot={shot} index={i}/></Sequence>)}
   <Sequence from={0} durationInFrames={1800}>
     <Audio src={staticFile("narration.mp3")} volume={.96}/>
     <Audio src={staticFile("ambience.wav")} volume={.2}/>
