@@ -36,7 +36,7 @@ The engine selects only the cast required by the story: 2–7 distinct character
 - `assets/item-library.json`: machine-readable asset manifest.
 - `src/ScenePropLayer.jsx`: reusable vector props with lightweight motion and hand-aware phone placement.
 - `src/StoryStickerLayer.jsx`: tag, stat, definition, steps, quote, compare, diagram, timeline and callout overlays.
-- `src/WiseLabFilm.jsx`: Remotion character rig, layered environments, camera moves and scene renderer.
+- `src/WiseLabFilm.jsx` and `src/EnvironmentLibrary.jsx`: Remotion character rig, layered cafe/street/bedroom/park scenes plus office/classroom/library/living-room vector sets, camera moves and scene renderer.
 
 ## Production and monetization safeguards
 
