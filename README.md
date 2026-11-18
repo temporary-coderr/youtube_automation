@@ -1,31 +1,33 @@
-# WISE-LAB Animation Lab
+# WISE-LAB Animation Engine
 
-An isolated sandbox for testing a new animation direction without changing the production repository.
+WISE-LAB is a script-first 2D animation production system. The creator supplies the original script in `scripts/narration.txt`; the engine creates the visual direction and production around it.
 
-## Experiment direction
+## Core principles
 
-**Cinematic 2D motion storytelling**: large readable characters, layered environments, camera movement, object animation, smooth transitions, and narration-synchronized captions.
+- Creator-owned hooks, stories, dialogue, claims and narration remain unchanged.
+- A fixed recurring cast is reused across videos: Alex, Maya, Ethan, Zoe, Oliver and Arthur.
+- Each video uses only the 2–7 characters its story needs.
+- Visual direction may be AI-assisted, but AI is restricted to scenes, actions, environments, props, camera direction and explanatory graphics.
+- Reusable vector rigs, props and stickers improve consistency and production efficiency.
+- No stock footage is used in the target visual style.
+- Narration timing drives the in-video caption track and scene timeline.
 
-## Non-negotiable test rules
+## Production workflow
 
-- This repository is experimental; production code in `USA-channel` is untouched.
-- No stock footage or raster scene backgrounds in the target style.
-- Landscape (16:9) and vertical (9:16) output must both remain supported.
-- Character scale and composition must be deliberate; the lead should be clearly readable.
-- Every scene needs visible motion beyond a static image or simple fade.
-- Captions must have a single rendering owner to prevent duplicate subtitles.
-- Keep rendering lightweight enough for GitHub Actions.
+1. Put the creator-written script in `scripts/narration.txt`.
+2. Run `python scripts/plan_scenes.py` to produce a visual-only scene plan. Gemini is optional; a deterministic planner is available as fallback.
+3. Run `python scripts/generate_narration.py` to generate audio, SRT and timed caption data.
+4. Run the Remotion composition to render the film.
+5. Review the rendered MP4 for visual accuracy, motion, pacing, caption sync, sound and originality before upload.
 
-## First milestone
+## Main modules
 
-Build a short 30–45 second sample and inspect the rendered MP4 before integrating anything into production.
+- `src/wiseLabCast.js` — recurring character bible and cast constraints.
+- `src/wiseLabAssets.js` / `assets/item-library.json` — reusable visual asset catalogue.
+- `src/sceneDirector.js` / `scripts/plan_scenes.py` — visual planning and validation.
+- `src/WiseLabFilm.jsx` — character rig, environments, camera and Remotion scene composition.
+- `src/ScenePropLayer.jsx` — reusable vector props.
+- `src/StoryStickerLayer.jsx` — animated explanatory graphics.
+- `src/NarrationCaptionLayer.jsx` — single narration-synchronized subtitle track.
 
-## Planned pipeline
-
-1. Script beats -> scene timeline.
-2. Scene timeline -> layered vector scene descriptions.
-3. Timeline -> camera, character, prop, and transition keyframes.
-4. Render frames -> encode MP4.
-5. Mix narration, sound effects, and one caption track.
-
-The initial prototype will favor a small deterministic renderer over a heavyweight animation framework.
+See [docs/WISE_LAB_STORY_ENGINE.md](docs/WISE_LAB_STORY_ENGINE.md) for the architecture and current implementation boundaries.
