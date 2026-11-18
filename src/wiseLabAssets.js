@@ -20,7 +20,7 @@ export const WISE_LAB_ASSETS = Object.freeze({
     lamp:{interaction:["switch-on","switch-off","adjust"],anchors:["desk","floor"]}
   },
   stickers:["tag","stat","definition","steps","quote","compare","diagram","timeline","callout"],
-  motionClips:["idle","gesture","walk","turn","reach","phone","think","sit","stand","grasp","put-down","walk-away"],
+  motionClips:["idle","gesture","walk","turn","reach","phone","think","sit"],
   cameraMoves:["locked","push-in","pull-back","tracking","pan-left","pan-right","over-shoulder","parallax"],
   transitions:["cut","cross-dissolve","match-move","whip-pan","foreground-wipe"]
 });
