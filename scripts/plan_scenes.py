@@ -149,7 +149,7 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
         "Group adjacent sentence indexes into coherent visual beats. Every sentence index must appear exactly once, in original order.",
         "Use a suitable environment, meaningful action, and optional props from allowed_props. Use a psychology visual only when it clearly illustrates the beat.",
         "If using a sticker, choose visual from allowed_psychology_visuals. Set motion to dynamic for subtle movement or static when motion would distract; dynamic is the default.",
-        "Return JSON only: {beats:[{sentence_indexes:[0],place:'cafe',characters:['alex','maya'],lead_action:'gesture',friend_action:'idle',props:['mug'],sticker:null,camera:'push-in'}]}.",
+        "Return JSON only: {beats:[{sentence_indexes:[0],place:'cafe',characters:['alex','maya'],lead_action:'gesture',friend_action:'idle',props:['mug'],sticker:{type:'tag',visual:'thought_loop',motion:'dynamic'},camera:'push-in'}]}.",
         "Do not create new characters, new narration, dialogue, statistics, research claims or text not present in the script."
       ]
     }
@@ -183,6 +183,13 @@ def request_gemini_plan(script: str, fallback: dict) -> dict | None:
             if sticker and sticker.get("type")=="stat" and not any(str(n) in str(sticker.get("value","")) for n in re.findall(r"\d+(?:\.\d+)?%?",excerpt)):
                 sticker=None
             if sticker is None: sticker=infer_sticker(excerpt,n)
+            if sticker:
+                inferred_visual = infer_psychology_visual(excerpt)
+                if sticker.get("visual") not in PSYCHOLOGY_VISUALS:
+                    sticker["visual"] = inferred_visual
+                if sticker.get("motion") not in ("static", "dynamic"):
+                    sticker["motion"] = "dynamic"
+                sticker.setdefault("artSize", 174)
             props=[p for p in beat.get("props",[]) if p in PROPS][:3] if isinstance(beat.get("props",[]),list) else []
             camera=beat.get("camera","push-in")
             camera_map={"push-in":([1.0,1.07],[0,-24]),"pull-back":([1.07,1.0],[0,0]),"tracking":([1.02,1.05],[-55,0]),"pan-left":([1.04,1.04],[55,0]),"pan-right":([1.04,1.04],[-55,0]),"over-shoulder":([1.08,1.12],[-35,-20]),"parallax":([1.0,1.05],[0,-18]),"locked":([1.0,1.0],[0,0])}
