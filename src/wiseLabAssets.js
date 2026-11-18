@@ -3,6 +3,7 @@ export const WISE_LAB_ASSETS = Object.freeze({
   characters:["alex","maya","ethan","zoe","oliver","arthur"],
   environments:{
     cafe:{layers:["architecture","windows","lighting","furniture","foreground"],mood:"social / warm"},
+    "cafe-alone":{extends:"cafe",layers:["architecture","windows","lighting","furniture","foreground"],mood:"quiet / reflective"},
     street:{layers:["sky","distant-buildings","street-furniture","ground","atmosphere"],mood:"transition / reflective"},
     bedroom:{layers:["window","room-architecture","bedroom-furniture","lighting","foreground"],mood:"private / introspective"},
     "bedroom-phone":{extends:"bedroom",layers:["phone","notifications","screen-glow"],mood:"digital distraction"},
