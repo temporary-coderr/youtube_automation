@@ -4,6 +4,7 @@ import {WISE_LAB_CAST} from "./wiseLabCast";
 import {StoryStickerLayer} from "./StoryStickerLayer";
 import {ScenePropLayer} from "./ScenePropLayer";
 import {NarrationCaptionLayer} from "./NarrationCaptionLayer";
+import {OfficeSet, ClassroomSet, LibrarySet, LivingRoomSet} from "./EnvironmentLibrary";
 import {validateStoryShots} from "./storyRules";
 import {validateVisualDirection} from "./sceneDirector";
 import {GENERATED_SCENE_PLAN} from "./generatedScenePlan";
@@ -440,6 +441,10 @@ function Shot({shot,index}){
       {shot.place==="cafe"||shot.place==="cafe-alone" ? <CafeSet frame={local}/> :
        shot.place==="street" ? <StreetSet frame={local}/> :
        shot.place==="park" ? <ParkSet frame={local}/> :
+       shot.place==="office" ? <OfficeSet frame={local}/> :
+       shot.place==="classroom" ? <ClassroomSet frame={local}/> :
+       shot.place==="library" ? <LibrarySet frame={local}/> :
+       shot.place==="living-room" ? <LivingRoomSet frame={local}/> :
        <BedroomSet frame={local} dawn={shot.place==="bedroom-dawn"}/>}
       {shot.place==="cafe" && <>
         <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} talk={lead.talk} kind={lead.characterId || "alex"} s={1.03}/>
@@ -467,6 +472,10 @@ function Shot({shot,index}){
         <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
         {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.92} walkAmount={friend.walk||0}/>}
         {shot.birds && <ParkBirds frame={local}/>}
+      </>}
+      {["office","classroom","library","living-room"].includes(shot.place) && <>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.04} walkAmount={lead.action==="walk"?1:0}/>
+        {friend && <CharacterRig x={friend.x || lead.x+560} y={friend.y || lead.y} frame={local} action={friend.action || "idle"} kind={friend.characterId || "maya"} s={.92} walkAmount={friend.walk||0}/>}
       </>}
       <ScenePropLayer props={shot.props || []} frame={local} lead={lead} place={shot.place}/>
       {shot.bubble && <g opacity={interpolate(local,[14,26,90,110],[0,1,1,0],clamp)}>
