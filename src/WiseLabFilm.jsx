@@ -3,6 +3,8 @@ import {AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame, staticFile,
 import {WISE_LAB_CAST} from "./wiseLabCast";
 import {StoryStickerLayer} from "./StoryStickerLayer";
 import {validateStoryShots} from "./storyRules";
+import {validateVisualDirection} from "./sceneDirector";
+import {GENERATED_SCENE_PLAN} from "./generatedScenePlan";
 
 /*
  * WISE-LAB — illustrated story film v2
@@ -22,8 +24,8 @@ const pulse = (f,s=1) => (Math.sin(f*.12)*.5+.5)*s;
 
 function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=1,walkAmount=0,talk=false}){
   const castId = kind === "friend" ? "maya" : kind;
-  const profile = WISE_LAB_CAST[castId] || WISE_LAB_CAST.arjun;
-  const lead = castId === "arjun";
+  const profile = WISE_LAB_CAST[castId] || WISE_LAB_CAST.alex;
+  const lead = castId === "alex";
   const skin = profile.skin;
   const skinShade = profile.skinShade;
   const shirt = profile.shirt;
@@ -45,7 +47,7 @@ function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=
   const mouth = talk && Math.sin(frame*.58)>0.04;
   const leftLeg = stride*29 + (sit?-18:0);
   const rightLeg = -stride*29 + (sit?24:0);
-  return <g transform={"translate("+(x+walkTravel)+" "+(y+bob)+") scale("+s*facing+" "+s+")"}>
+  return <g transform={"translate("+(x+walkTravel)+" "+(y+bob)+") scale("+s*(profile.scale || 1)*facing+" "+s*(profile.scale || 1)+")"}>
     <ellipse cx="0" cy="-2" rx="106" ry="20" fill="#070c12" opacity=".42"/>
     {/* Legs: layered denim, seams, knees and sneakers */}
     <g transform={"rotate("+leftLeg+" -37 -150)"}>
@@ -121,6 +123,16 @@ function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=
         <path d="M-58 -75 Q-80 -121 -40 -160 Q12 -190 56 -143 Q88 -106 62 -48 L46 43 Q38 16 34 -39 Q-5 -14 -53 -36Z" fill="#211b1a"/>
         <path d="M-47 -119 Q-25 -160 9 -162 M5 -143 Q34 -163 57 -132" stroke="#49352e" strokeWidth="5" fill="none"/>
       </>}
+      {profile.silhouette === "short-curl" && <g fill={hair}>
+        {[-42,-22,0,22,42].map((cx,i)=><circle key={i} cx={cx} cy={-133-(i%2)*9} r="18"/>)}
+      </g>}
+      {profile.silhouette === "curly-bob" && <g fill={hair}>
+        {[-62,-48,48,62].map((cx,i)=><circle key={i} cx={cx} cy={-67+(i%2)*24} r="16"/>)}
+      </g>}
+      {profile.silhouette === "child-curly" && <g fill={hair}>
+        {[-42,-22,0,22,42].map((cx,i)=><circle key={i} cx={cx} cy={-143-(i%2)*7} r="17"/>)}
+      </g>}
+      {profile.silhouette === "silver-side-part" && <path d="M-53 -116 Q-24 -165 20 -153 Q43 -148 61 -124" stroke="#e0ded5" strokeWidth="8" fill="none" strokeLinecap="round"/>}
       <path d="M-56 -17 Q-72 -22 -67 4 Q-60 26 -48 18" fill={skinShade}/>
       <path d="M56 -17 Q72 -22 67 4 Q60 26 48 18" fill={skinShade}/>
       <path d="M-39 -22 Q-23 -34 -7 -24 M12 -24 Q29 -35 43 -21" stroke="#34241f" strokeWidth="8" fill="none" strokeLinecap="round"/>
@@ -137,6 +149,7 @@ function CharacterRig({x=900,y=900,s=1,frame=0,kind="lead",action="idle",facing=
       <path d="M-2 28 Q4 32 10 27" stroke="#d79a7b" strokeWidth="2" fill="none" opacity=".65"/>
       <ellipse cx="-39" cy="30" rx="13" ry="7" fill="#d88c78" opacity=".16"/><ellipse cx="40" cy="30" rx="13" ry="7" fill="#d88c78" opacity=".16"/>
       {mouth ? <path d="M-7 45 Q4 37 17 46 Q14 61 4 61 Q-6 59 -7 45Z" fill="#502d2b" stroke="#713d37" strokeWidth="2"/> : <path d="M-12 45 Q4 54 19 43" stroke="#713d37" strokeWidth="4" fill="none" strokeLinecap="round"/>}
+      {profile.ageStyle === "elder" && <g fill={hair} opacity=".92"><path d="M-37 54 Q0 76 37 54 Q30 105 0 106 Q-30 105 -37 54Z"/><path d="M-39 56 Q-27 49 -17 58 M17 58 Q27 49 39 56" stroke="#777d7b" strokeWidth="3" fill="none"/></g>}
       {lead && <path d="M-46 -112 Q-21 -128 -2 -115 M8 -122 Q34 -137 53 -106" stroke="#11151c" strokeWidth="12" fill="none" strokeLinecap="round"/>}
       <path d="M-17 70 Q0 78 20 68" stroke="#754b40" strokeWidth="3" fill="none" opacity=".55"/>
     </g>
@@ -378,7 +391,7 @@ function ParkBirds({frame=0}){
  </g>;
 }
 
-const shots = [
+const demoShots = [
  {place:"cafe",title:"THE MOMENT",caption:"A tiny awkward moment happens.",lead:{x:755,y:925,action:"gesture",talk:true},friend:{x:1390,y:930,action:"idle",talk:false},sticker:{type:"tag",text:"A MOMENT EVERYONE KNOWS",tone:"gold"},zoom:[1.0,1.055],pan:[0,-20]},
  {place:"cafe",title:"THE PAUSE",caption:"A pause lasts only a second.",lead:{x:765,y:925,action:"gesture",talk:true},friend:{x:1390,y:930,action:"turn",talk:true},zoom:[1.055,1.11],pan:[-20,-70],bubble:true},
  {place:"cafe",title:"THE EXIT",caption:"Then the other person moves on.",lead:{x:735,y:925,action:"idle"},friend:{x:0,y:930,action:"walk",walk:1,leave:true},zoom:[1.11,1.04],pan:[-70,40]},
@@ -396,7 +409,8 @@ const shots = [
  {place:"park",title:"WISE-LAB",caption:"You are more than one awkward moment.",lead:{x:1110,y:940,action:"idle"},zoom:[1.0,1.0],pan:[0,0],end:true}
 ];
 
-const validatedShots = validateStoryShots(shots);
+const shots = GENERATED_SCENE_PLAN.shots && GENERATED_SCENE_PLAN.shots.length ? GENERATED_SCENE_PLAN.shots : demoShots;
+const validatedShots = validateVisualDirection({shots}).shots;
 
 function CharacterPhoneInHand({x,y,frame}){
  return <Phone x={x} y={y} frame={frame} tilt={lerp(frame,0,119,-7,5)} screen/>
@@ -404,7 +418,8 @@ function CharacterPhoneInHand({x,y,frame}){
 
 function Shot({shot,index}){
  const f=useCurrentFrame();
- const local = Math.max(0,Math.min(119,f));
+ const shotDuration = shot.durationInFrames || 120;
+ const local = Math.max(0,Math.min(119,Math.round((f / Math.max(1,shotDuration - 1)) * 119)));
  const z=lerp(local,0,119,shot.zoom[0],shot.zoom[1]);
  const pan=lerp(local,0,119,shot.pan[0],shot.pan[1]);
  const fade=interpolate(local,[0,7,112,119],[0,1,1,0],clamp);
@@ -425,27 +440,27 @@ function Shot({shot,index}){
        shot.place==="park" ? <ParkSet frame={local}/> :
        <BedroomSet frame={local} dawn={shot.place==="bedroom-dawn"}/>}
       {shot.place==="cafe" && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} talk={lead.talk} kind={lead.characterId || "arjun"} s={1.03}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} talk={lead.talk} kind={lead.characterId || "alex"} s={1.03}/>
         {friend && <CharacterRig x={leaveX} y={friend.y} frame={local} action={friend.action} talk={friend.talk} kind={friend.characterId || "maya"} s={.94} walkAmount={friend.walk||0}/>}
         <CafeForeground frame={local} alone={false}/>
       </>}
       {shot.place==="cafe-alone" && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.08}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.08}/>
         <CafeForeground frame={local} alone={true}/>
       </>}
       {shot.place==="street" && <>
-        <CharacterRig x={lerp(local,0,119,lead.x-45,lead.x+55)} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.04} walkAmount={1}/>
+        <CharacterRig x={lerp(local,0,119,lead.x-45,lead.x+55)} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.04} walkAmount={1}/>
         {shot.memory && <MemoryPanel x={1280} y={255} frame={local} opacity={interpolate(local,[0,20,100,119],[0,.82,.82,0],clamp)}/>}
       </>}
       {isBedroom && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.08} talk={false}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.08} talk={false}/>
         <DeskProps frame={local} phone={true} faceDown={!!shot.phoneDown}/>
         {shot.place==="bedroom-phone" && shot.notify && <NotificationStack frame={local}/>}
         {shot.thought && <ThoughtLoop frame={local}/>}
         {shot.place==="bedroom-phone" && shot.lead.action==="phone" && <CharacterPhoneInHand x={890} y={555} frame={local}/>}
       </>}
       {shot.place==="park" && <>
-        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "arjun"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
+        <CharacterRig x={lead.x} y={lead.y} frame={local} action={lead.action} kind={lead.characterId || "alex"} s={1.06} walkAmount={lead.action==="walk"?1:0}/>
         {shot.birds && <ParkBirds frame={local}/>}
       </>}
       {shot.bubble && <g opacity={interpolate(local,[14,26,90,110],[0,1,1,0],clamp)}>
@@ -467,8 +482,8 @@ function Shot({shot,index}){
 }
 
 export const WiseLabFilm = () => <AbsoluteFill style={{background:"#101821"}}>
-  {validatedShots.map((shot,i)=><Sequence key={i} from={i*120} durationInFrames={120}><Shot shot={shot} index={i}/></Sequence>)}
-  <Sequence from={0} durationInFrames={1800}>
+  {validatedShots.map((shot,i)=><Sequence key={i} from={validatedShots.slice(0,i).reduce((sum,item)=>sum+(item.durationInFrames||120),0)} durationInFrames={shot.durationInFrames||120}><Shot shot={shot} index={i}/></Sequence>)}
+  <Sequence from={0} durationInFrames={GENERATED_SCENE_PLAN.durationInFrames || validatedShots.reduce((sum,item)=>sum+(item.durationInFrames||120),0)}>
     <Audio src={staticFile("narration.mp3")} volume={.96}/>
     <Audio src={staticFile("ambience.wav")} volume={.2}/>
   </Sequence>
