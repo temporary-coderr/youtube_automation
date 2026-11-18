@@ -19,7 +19,7 @@ The reusable cast bible is `src/wiseLabCast.js`:
 | `oliver` | Oliver | Child perspective |
 | `arthur` | Arthur | Elder perspective |
 
-The engine selects only the cast required by the story: 2–7 distinct characters per video, no more than 3 in one scene. Character identity, palette and scale are stored centrally. A new recurring character must be designed and rigged before being admitted to the library; one-off characters are not generated for every episode.
+The engine selects only the cast required by the story: 2–7 distinct characters per video, no more than 2 in one scene. Character identity, palette and scale are stored centrally. A new recurring character must be designed and rigged before being admitted to the library; one-off characters are not generated for every episode.
 
 ## Visual direction pipeline
 
