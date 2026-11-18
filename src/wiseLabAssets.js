@@ -8,6 +8,10 @@ export const WISE_LAB_ASSETS = Object.freeze({
     bedroom:{layers:["window","room-architecture","bedroom-furniture","lighting","foreground"],mood:"private / introspective"},
     "bedroom-phone":{extends:"bedroom",layers:["phone","notifications","screen-glow"],mood:"digital distraction"},
     "bedroom-dawn":{extends:"bedroom",lighting:"dawn",mood:"resolution"},
+    office:{layers:["windows","city-view","bookshelves","workstation","floor"],mood:"work / focus"},
+    classroom:{layers:["windows","chalkboard","desks","floor"],mood:"learning / group"},
+    library:{layers:["bookshelves","reading-tables","lighting","floor"],mood:"study / reflection"},
+    "living-room":{layers:["window","sofa","side-table","lamp","floor"],mood:"home / relationships"},
     park:{layers:["sky","distant-trees","midground-trees","path","foreground"],mood:"open / restorative"}
   },
   props:{
